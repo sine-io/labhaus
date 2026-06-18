@@ -1,7 +1,6 @@
 <div align="center">
 
-<!-- Logo 占位符 - Issue #5 完成后替换 -->
-<img src=".github/assets/logo-placeholder.svg" alt="Labhaus Logo" width="120" height="120">
+<img src=".github/assets/logo-128.png" alt="Labhaus Logo" width="120" height="120">
 
 # Labhaus
 
