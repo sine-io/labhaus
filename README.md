@@ -35,6 +35,8 @@
 
 ### 对标分析
 
+#### 国际竞品
+
 | 维度 | ComfyUI | Runway | Synthesia | **我们** |
 |------|---------|--------|-----------|---------|
 | **易用性** | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
@@ -44,11 +46,37 @@
 | **模板市场** | ❌ | ❌ | ❌ | ✅ |
 | **私有部署** | ✅ | ❌ | 💰 | ✅ |
 
+#### 国内开源生态
+
+| 项目 | Stars | 定位 | 核心能力 | 目标用户 |
+|------|-------|------|---------|---------|
+| [MoneyPrinterTurbo](https://github.com/harry0703/MoneyPrinterTurbo) | 89.6k | 一键生成短视频 | 快速、简单 | 个人创作者 |
+| [Pixelle-Video](https://github.com/AIDC-AI/Pixelle-Video) | 23.0k | 全自动短视频引擎 | 全自动、数字人 | 短视频创作者 |
+| [NarratoAI](https://github.com/linyqh/NarratoAI) | 9.9k | 影视解说自动化 | 垂直场景 | 影视解说创作者 |
+| [MoneyPrinterPlus](https://github.com/ddean2009/MoneyPrinterPlus) | 6.6k | 批量生成+自动发布 | 批量、发布 | 批量做号 |
+| **AI Content Pipeline** | **新** | **工作流平台** | **批量+工作流+模板市场** | **企业+开发者** |
+
 ### 核心差异化
 
 1. **ComfyUI 的强大** + **Canva 的易用** + **Gumroad 的社区**
 2. **500+ 样式库**（来自 awesome-gpt-image-2）
 3. **模板市场**（网络效应）
+4. **可视化工作流编辑器**（所有开源工具都没有）
+5. **企业级批量能力**（并发、CSV、API）
+
+### 定位差异
+
+**我们不是**：
+- ❌ "更好的 MoneyPrinterTurbo"（一键生成已是红海）
+- ❌ "更快的 Pixelle-Video"（个人用户市场已饱和）
+- ❌ "中国版 Runway"（SaaS 竞争激烈）
+
+**我们是**：
+- ✅ **"AI 内容生产的 Zapier"** - 工作流自动化平台
+- ✅ **"视频生成的 Canva"** - 低代码，可视化
+- ✅ **"内容创作的 Gumroad"** - 模板市场，用户互助
+
+**一句话**：让专业团队 3 小时批量生产 100 个视频
 
 ---
 
