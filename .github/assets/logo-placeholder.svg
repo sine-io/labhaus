@@ -1,0 +1,8 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 临时占位符 - Issue #5 完成后替换为实际 Logo -->
+  <rect width="120" height="120" rx="24" fill="#0EA5E9"/>
+  <circle cx="60" cy="45" r="18" fill="white" opacity="0.9"/>
+  <rect x="45" y="70" width="30" height="25" rx="4" fill="white" opacity="0.9"/>
+  <path d="M50 75L55 82L65 72" stroke="#0EA5E9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="60" y="110" font-family="Arial, sans-serif" font-size="10" fill="white" text-anchor="middle" font-weight="bold">LABHAUS</text>
+</svg>

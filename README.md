@@ -1,352 +1,258 @@
+<div align="center">
+
+<!-- Logo 占位符 - Issue #5 完成后替换 -->
+<img src=".github/assets/logo-placeholder.svg" alt="Labhaus Logo" width="120" height="120">
+
 # Labhaus
 
-> 可视化 AI 内容生产平台 - 让非技术人员也能批量生产 AI 视频
+**实验一次，复制千次**
 
-[![Status](https://img.shields.io/badge/status-MVP%20开发中-blue)](https://github.com/sine-io/labhaus)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+*Experiment. Automate. Scale.*
 
----
+可视化 AI 内容生产平台 - 让专业团队批量生产 AI 视频的工作流实验室
 
-## 🎯 项目定位
+[![Status](https://img.shields.io/badge/status-MVP%20开发中-0EA5E9)](https://github.com/sine-io/labhaus)
+[![License](https://img.shields.io/badge/license-MIT-10B981)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-10B981)](https://github.com/sine-io/labhaus/pulls)
 
-**"Canva for AI Video Workflow"**
+[English](README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
 
-让非技术人员也能搭建自己的内容生产流水线：
-- ✅ **零代码**：拖拽式工作流编辑器
-- ✅ **批量生产**：一次配置，输出 10/100 个视频
-- ✅ **样式复用**：500+ 工业级 GPT-Image-2 提示词库
-- ✅ **模板市场**：用户共享/购买成功配方
+</div>
 
 ---
 
-## 📊 项目现状
+## 💡 为什么是 Labhaus？
 
-**阶段**：需求验证 → MVP 开发准备
+> **"Where content experiments succeed"**  
+> 内容创作不是流水线，而是实验室
 
-**时间线**：
-- ✅ 市场调研完成（2026-06-18）
-- ✅ 方法论分析完成（真需求、双钻模型、JTBD）
-- 🔄 用户访谈进行中（目标：3-5 个种子用户）
-- ⏳ MVP Phase 1 启动（预计 2 周）
+大多数 AI 视频工具都在解决"如何快速生成"，但专业团队真正的痛点是：
 
----
+- ❌ **单次实验成本太高** - 测试一个创意需要 2-4 小时
+- ❌ **成功配方难以复制** - 风格一致性依赖人工
+- ❌ **批量生产缺乏工具** - CSV 导入、并发执行、API 集成都要自己写
 
-## 🚀 核心价值
+**Labhaus 提供的是实验平台，而不是生成工具**：
 
-### 对标分析
-
-#### 国际竞品
-
-| 维度 | ComfyUI | Runway | Synthesia | **我们** |
-|------|---------|--------|-----------|---------|
-| **易用性** | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **可扩展性** | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **批量能力** | ⭐⭐⭐ | ⭐ | ⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **样式复用** | ⭐⭐ | ⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **模板市场** | ❌ | ❌ | ❌ | ✅ |
-| **私有部署** | ✅ | ❌ | 💰 | ✅ |
-
-#### 国内开源生态
-
-| 项目 | Stars | 定位 | 核心能力 | 目标用户 |
-|------|-------|------|---------|---------|
-| [MoneyPrinterTurbo](https://github.com/harry0703/MoneyPrinterTurbo) | 89.6k | 一键生成短视频 | 快速、简单 | 个人创作者 |
-| [Pixelle-Video](https://github.com/AIDC-AI/Pixelle-Video) | 23.0k | 全自动短视频引擎 | 全自动、数字人 | 短视频创作者 |
-| [NarratoAI](https://github.com/linyqh/NarratoAI) | 9.9k | 影视解说自动化 | 垂直场景 | 影视解说创作者 |
-| [MoneyPrinterPlus](https://github.com/ddean2009/MoneyPrinterPlus) | 6.6k | 批量生成+自动发布 | 批量、发布 | 批量做号 |
-| **Labhaus** | **新** | **工作流平台** | **批量+工作流+模板市场** | **企业+开发者** |
-
-### 核心差异化
-
-1. **ComfyUI 的强大** + **Canva 的易用** + **Gumroad 的社区**
-2. **500+ 样式库**（来自 awesome-gpt-image-2）
-3. **模板市场**（网络效应）
-4. **可视化工作流编辑器**（所有开源工具都没有）
-5. **企业级批量能力**（并发、CSV、API）
-
-### 定位差异
-
-**我们不是**：
-- ❌ "更好的 MoneyPrinterTurbo"（一键生成已是红海）
-- ❌ "更快的 Pixelle-Video"（个人用户市场已饱和）
-- ❌ "中国版 Runway"（SaaS 竞争激烈）
-
-**我们是**：
-- ✅ **"AI 内容生产的 Zapier"** - 工作流自动化平台
-- ✅ **"视频生成的 Canva"** - 低代码，可视化
-- ✅ **"内容创作的 Gumroad"** - 模板市场，用户互助
-
-**一句话**：让专业团队 3 小时批量生产 100 个视频
+1. **实验** - 可视化工作流编辑器，快速测试创意
+2. **验证** - 人工介入节点，确保质量
+3. **规模化** - 一键批量复制，保持风格一致性
 
 ---
 
-## 👥 目标用户
+## 🎯 核心价值
 
-### 主要用户（MVP 聚焦）
+### 对比主流方案
 
-#### 1. 内容创作者（B2C）
-**痛点**：
-- 批量做视频太慢（手动 2-4 小时/条）
-- 保持风格一致性难
-- 外包成本高（￥100-500/条）
+|  | MoneyPrinterTurbo | Runway | **Labhaus** |
+|---|---|---|---|
+| **定位** | 一键生成工具 | SaaS 平台 | **工作流实验室** |
+| **目标用户** | 个人创作者 | 企业用户 | **专业团队+企业** |
+| **核心能力** | 快速、简单 | 全自动 | **可视化工作流+批量** |
+| **可定制性** | ⭐⭐ | ⭐⭐ | **⭐⭐⭐⭐⭐** |
+| **批量能力** | ⭐⭐⭐ | ⭐ | **⭐⭐⭐⭐⭐** |
+| **样式库** | ❌ | ❌ | **✅ 500+** |
+| **模板市场** | ❌ | ❌ | **✅** |
+| **私有部署** | ✅ | ❌ | **✅** |
 
-**价值**：
-- 3 小时批量生成 10 条
-- 单条成本 < ￥50
-- 风格一致性 > 90%
+### 三大独特优势
 
-#### 2. 企业营销团队（B2B）
-**痛点**：
-- 需要大量营销素材
-- 测试多种创意成本高
-- 外包周期长
+#### 1. 可视化工作流编辑器 🔥
+拖拽式节点编辑，无需编程
+- 输入节点：文本/URL/CSV
+- 处理节点：LLM/样式选择/生图/TTS/合成
+- 输出节点：下载/S3/Telegram
+- 人工介入：预览、审核、修改
 
-**价值**：
-- CSV 批量导入
-- A/B 测试多种风格
-- 成本降低 80%
+#### 2. 500+ GPT-Image-2 样式库
+来自 [awesome-gpt-image-2](https://github.com/sine-io/awesome-gpt-image-2)
+- 工业级提示词案例
+- 按场景/风格分类
+- 一键应用到工作流
 
-#### 3. 开发者（B2D）
-**痛点**：
-- 从零开发周期长（3-6 个月）
-- 调用 Runway API 贵且黑盒
-- 开源方案维护成本高
-
-**价值**：
-- 1 周完成集成
-- API 文档完善
-- 深度可定制
+#### 3. 模板市场（即将推出）
+- 分享成功的工作流配方
+- 购买/出售优质模板
+- 社区驱动的网络效应
 
 ---
 
-## 🏗️ 技术架构
+## 🚀 快速开始
 
-### 整体架构
+### 前置要求
 
-```
-ai-content-pipeline/
-├── packages/
-│   ├── core/                    # 核心引擎
-│   │   ├── workflow-engine/    # 工作流编排
-│   │   ├── state-machine/      # 任务状态机
-│   │   └── provider-sdk/       # Provider 抽象层
-│   │
-│   ├── style-library/          # 样式库服务
-│   │   ├── api/                # RESTful API
-│   │   ├── data/               # 500+ 案例数据
-│   │   └── engine/             # 样式匹配算法
-│   │
-│   ├── services/               # 微服务
-│   │   ├── image-gen/          # 图像生成
-│   │   ├── video-render/       # 视频渲染
-│   │   ├── script-gen/         # 剧本生成
-│   │   └── template-market/    # 模板市场
-│   │
-│   └── apps/
-│       ├── web/                # Web 主应用
-│       │   ├── editor/         # 🔥 可视化编辑器
-│       │   ├── gallery/        # 样式库展示
-│       │   ├── marketplace/    # 🔥 模板市场
-│       │   └── dashboard/      # 任务监控
-│       │
-│       └── api-gateway/        # 统一 API 网关
-│
-├── infra/                      # 基础设施
-│   ├── docker/
-│   ├── k8s/
-│   └── terraform/
-│
-└── docs/                       # 文档
-    ├── product/                # 产品文档
-    ├── research/               # 调研报告
-    ├── architecture/           # 架构设计
-    └── planning/               # 规划文档
+- Docker & Docker Compose
+- Python 3.11+
+- Node.js 20+
+
+### 一键启动
+
+```bash
+# 克隆项目
+git clone https://github.com/sine-io/labhaus.git
+cd labhaus
+
+# 启动服务
+docker-compose up -d
+
+# 访问 Web 界面
+open http://localhost:3000
 ```
 
-### 技术栈
+### 运行第一个工作流
 
-**前端**
-- React + TypeScript
-- React Flow（节点编辑器）
-- Zustand（状态管理）
-- TailwindCSS + shadcn/ui
+1. 打开可视化编辑器
+2. 选择预设模板："文章 → 视频"
+3. 上传 CSV 或输入文本
+4. 从样式库选择风格
+5. 点击"批量执行"
+6. 下载生成的视频
 
-**后端**
-- Python FastAPI
-- Celery + Redis（异步任务）
-- PostgreSQL（主数据库）
-- MinIO / S3（对象存储）
-
-**工作流引擎**
-- Temporal / 自研状态机
-- JSON Schema（工作流定义）
+详细文档：[快速开始指南](docs/guides/quick-start.md)
 
 ---
 
-## 📅 MVP 路线图
+## 📦 项目架构
 
-### Phase 1: 基础整合（2 周）
-**目标**：两个项目代码合并，建立统一架构
+```
+labhaus/
+├── backend/              # Go 后端服务
+│   ├── workflow-engine/  # 工作流引擎
+│   └── style-library/    # 样式库 API
+├── frontend/             # React 前端
+│   ├── editor/           # 🔥 可视化编辑器
+│   ├── gallery/          # 样式库展示
+│   └── marketplace/      # 模板市场
+├── infra/                # Docker & K8s
+└── docs/                 # 完整文档
+```
 
-- [ ] 创建 Monorepo 结构
-- [ ] awesome-gpt-image-2 样式库提取为服务
-- [ ] ai-video-factory 状态机改造为通用引擎
-- [ ] 统一 API 网关和认证
+**技术栈**：
+- 前端：React + TypeScript + React Flow + TailwindCSS
+- 后端：Go + PostgreSQL + Redis
+- 工作流：自研状态机 + JSON Schema
+- 存储：MinIO / S3
 
-**交付物**：
-- 统一项目结构
-- 样式库 API（GET /styles）
-- 工作流引擎 API（POST /workflows/execute）
+详细架构：[系统设计文档](docs/architecture/system-design.md)
 
-### Phase 2: 核心工作流（4 周）🔥
-**目标**：实现第一个完整的 MVP 工作流
+---
 
-**2.1 样式库 API 化（1 周）**
-- [ ] 样式查询接口
-- [ ] 样式推荐算法
-- [ ] 批量生图接口
+## 🎬 典型使用场景
 
-**2.2 "文章 → 视频" 工作流（2 周）**
-- [ ] 剧本生成（LLM）
-- [ ] 分镜设计
-- [ ] 批量图像生成（GPT-Image-2 + 样式库）
-- [ ] 配音生成（TTS）
-- [ ] 视频合成（FFmpeg）
+### 场景 1：营销团队批量生产广告素材
+**痛点**：需要测试 10 种文案 × 5 种视觉风格 = 50 个视频  
+**方案**：
+1. CSV 导入 10 种文案
+2. 工作流配置 5 种样式库风格
+3. 批量生成 50 个视频
+4. 人工筛选最优组合
 
-**2.3 任务监控面板（1 周）**
-- [ ] 实时任务状态
-- [ ] 中间产物预览
-- [ ] 错误日志
+**效果**：3 小时完成，成本降低 80%
 
-**交付物**：
-- 完整的"文章 → 视频" demo
-- 任务监控面板
-- API 文档
+### 场景 2：内容创作者保持风格一致性
+**痛点**：手动调整每个视频的视觉风格，耗时且不一致  
+**方案**：
+1. 第一次实验找到最佳风格
+2. 保存为工作流模板
+3. 后续批量应用模板
 
-### Phase 3: 可视化编辑器（6 周）🔥🔥🔥
-**目标**：核心差异化功能
+**效果**：风格一致性 > 95%，单条时间从 4 小时 → 30 分钟
 
-**3.1 节点编辑器基础（2 周）**
-- [ ] React Flow 集成
-- [ ] 节点类型定义
-- [ ] 数据流验证
-- [ ] 保存/加载工作流
+### 场景 3：开发者集成 AI 视频能力
+**痛点**：从零开发需要 3-6 个月  
+**方案**：
+1. Docker 私有化部署
+2. RESTful API 调用
+3. Webhook 异步回调
 
-**3.2 内置节点库（2 周）**
-- [ ] 输入节点（文本/URL/CSV）
-- [ ] 处理节点（LLM/样式选择/生图/TTS/合成）
-- [ ] 输出节点（下载/S3/Telegram）
+**效果**：1 周完成集成，深度可定制
 
-**3.3 人工介入和预览（2 周）**
-- [ ] 中间结果预览
-- [ ] 人工审核节点
-- [ ] 手动修改和重试
+---
 
-**交付物**：
-- 拖拽式工作流编辑器
-- 10+ 内置节点
-- 工作流模板保存
+## 📊 开发路线图
 
-### Phase 4: 模板市场（MVP+，4 周）
-**目标**：商业化核心
+### ✅ Phase 1: 基础整合（已完成）
+- [x] 创建 Monorepo 结构
+- [x] 样式库数据迁移
+- [x] 统一 API 网关
 
-- [ ] 模板保存/加载
-- [ ] 模板分类和搜索
-- [ ] 模板分享（公开/私有）
-- [ ] 模板评分和评论
-- [ ] 付费模板（Stripe）
+### 🔄 Phase 2: 核心工作流（进行中）
+- [ ] 样式库 API 化
+- [ ] "文章 → 视频" 完整流程
+- [ ] 任务监控面板
+
+### ⏳ Phase 3: 可视化编辑器
+- [ ] React Flow 节点编辑器
+- [ ] 10+ 内置节点
+- [ ] 人工介入和预览
+
+### ⏳ Phase 4: 模板市场
+- [ ] 模板保存/分享
+- [ ] 付费模板
+- [ ] 社区评分
+
+完整路线图：[MVP 开发计划](docs/planning/mvp-roadmap.md)
 
 ---
 
 ## 💰 商业模式
 
-### 定价
+### 定价方案
 
-#### 免费版（Freemium）
-- 基础工作流功能
-- 公共样式库访问
-- 单任务串行执行
-- 月生成配额：10 个视频
-- 社区模板使用
-
-#### 专业版（$29/月）
-- 批量并发任务（10 并发）
-- 私有样式库
-- 高级节点（自定义脚本）
-- 月生成配额：100 个视频
-- API 调用（1000 次/月）
-- 优先支持
-
-#### 企业版（定制报价）
-- 私有化部署
-- 无限并发
-- 自定义 provider 集成
-- 白标服务
-- 专属技术支持
-- SLA 保障
+| 版本 | 价格 | 核心功能 |
+|------|------|---------|
+| **免费版** | $0 | 基础工作流、公共样式库、月生成 10 个视频 |
+| **专业版** | $29/月 | 批量并发（10 并发）、私有样式库、月生成 100 个视频 |
+| **企业版** | 定制 | 私有化部署、无限并发、白标服务、SLA 保障 |
 
 ### 收入来源
-
 1. **订阅费用**（主要）
 2. **模板市场分成**（30%）
-3. **API 调用费**（超出配额）
+3. **API 调用超额费**
 4. **专业服务**（定制开发、培训）
+
+---
+
+## 🤝 参与贡献
+
+项目目前处于 MVP 阶段，Beta 版本发布后将开放：
+
+- 🐛 Bug 报告和功能建议
+- 📝 文档改进
+- 🎨 样式库贡献
+- 🛠️ 模板市场分享
+
+贡献指南：[CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
 
 ## 📚 文档索引
 
-### 产品文档
-- [产品需求文档 (PRD)](docs/product/PRD.md)
-- [用户故事地图](docs/product/user-story-map.md)
-- [功能规格说明](docs/product/feature-specs.md)
-
-### 调研报告
-- [竞品分析报告](docs/research/competitive-analysis.md)
-- [市场调研总结](docs/research/market-research.md)
-- [方法论分析报告](docs/research/methodology-analysis.md)
-
-### 架构设计
-- [系统架构设计](docs/architecture/system-design.md)
-- [数据库设计](docs/architecture/database-schema.md)
-- [API 接口设计](docs/architecture/api-design.md)
-
-### 规划文档
-- [MVP 开发计划](docs/planning/mvp-roadmap.md)
-- [技术选型说明](docs/planning/tech-stack.md)
-- [风险管理计划](docs/planning/risk-management.md)
-
-### 用户研究
-- [用户访谈计划](docs/user-research/interview-plan.md)
-- [用户访谈记录](docs/user-research/interview-notes.md)
-- [用户画像](docs/user-research/user-personas.md)
-
----
-
-## 🤝 贡献指南
-
-项目目前处于 MVP 阶段，暂不接受外部贡献。
-
-待 Beta 版本发布后，我们将开放以下贡献方式：
-- 🐛 Bug 报告
-- 💡 功能建议
-- 📝 文档改进
-- 🎨 样式库贡献
+- **产品文档**：[PRD](docs/product/PRD.md) · [用户故事](docs/product/user-story-map.md)
+- **调研报告**：[竞品分析](docs/research/competitive-analysis.md) · [方法论分析](docs/research/methodology-analysis.md)
+- **架构设计**：[系统设计](docs/architecture/system-design.md) · [API 接口](docs/architecture/api-design.md)
+- **开发指南**：[快速开始](docs/guides/quick-start.md) · [本地开发](docs/guides/local-development.md)
 
 ---
 
 ## 📄 许可证
 
-[MIT License](LICENSE)
+本项目采用 [MIT License](LICENSE) 开源协议
 
 ---
 
-## 📧 联系方式
+## 📧 联系我们
 
 - **项目主页**：https://github.com/sine-io/labhaus
 - **Issues**：https://github.com/sine-io/labhaus/issues
+- **Discussions**：https://github.com/sine-io/labhaus/discussions
 
 ---
 
-**最后更新**：2026-06-18  
-**当前版本**：0.1.0-alpha（需求验证阶段）
+<div align="center">
+
+**Built with ❤️ by the Labhaus Team**
+
+*Where content experiments succeed*
+
+</div>
