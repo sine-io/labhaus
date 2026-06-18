@@ -1,8 +1,8 @@
-# AI Content Pipeline
+# Labhaus
 
 > 可视化 AI 内容生产平台 - 让非技术人员也能批量生产 AI 视频
 
-[![Status](https://img.shields.io/badge/status-MVP%20开发中-blue)](https://github.com/sine-io/ai-content-pipeline)
+[![Status](https://img.shields.io/badge/status-MVP%20开发中-blue)](https://github.com/sine-io/labhaus)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ---
@@ -54,7 +54,7 @@
 | [Pixelle-Video](https://github.com/AIDC-AI/Pixelle-Video) | 23.0k | 全自动短视频引擎 | 全自动、数字人 | 短视频创作者 |
 | [NarratoAI](https://github.com/linyqh/NarratoAI) | 9.9k | 影视解说自动化 | 垂直场景 | 影视解说创作者 |
 | [MoneyPrinterPlus](https://github.com/ddean2009/MoneyPrinterPlus) | 6.6k | 批量生成+自动发布 | 批量、发布 | 批量做号 |
-| **AI Content Pipeline** | **新** | **工作流平台** | **批量+工作流+模板市场** | **企业+开发者** |
+| **Labhaus** | **新** | **工作流平台** | **批量+工作流+模板市场** | **企业+开发者** |
 
 ### 核心差异化
 
@@ -343,8 +343,8 @@ ai-content-pipeline/
 
 ## 📧 联系方式
 
-- **项目主页**：https://github.com/sine-io/ai-content-pipeline
-- **Issues**：https://github.com/sine-io/ai-content-pipeline/issues
+- **项目主页**：https://github.com/sine-io/labhaus
+- **Issues**：https://github.com/sine-io/labhaus/issues
 
 ---
 

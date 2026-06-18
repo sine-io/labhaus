@@ -16,7 +16,7 @@
 | [NarratoAI](https://github.com/linyqh/NarratoAI) | 9.9k ⭐ | 影视解说自动化 | 2024-08 | Python |
 | [MoneyPrinterPlus](https://github.com/ddean2009/MoneyPrinterPlus) | 6.6k ⭐ | AI批量生成+自动发布 | 2024-05 | Python |
 | [Pixelle-MCP](https://github.com/AIDC-AI/Pixelle-MCP) | 1.1k ⭐ | ComfyUI MCP 服务器 | 2025-07 | Python |
-| **AI Content Pipeline** | 0 ⭐ | **可视化工作流平台** | **2026-06** | **Python+TS** |
+| **Labhaus** | 0 ⭐ | **可视化工作流平台** | **2026-06** | **Python+TS** |
 
 ---
 
@@ -180,7 +180,7 @@
 简单 ←━━━━━━━━━━━━━━━━━━━━━━━━━━→ 复杂
      专业 ←━━━━━━━━━━━━━━━━━━━━━━→ 
 
-MoneyPrinterTurbo    Pixelle-Video    MoneyPrinterPlus    AI Content Pipeline
+MoneyPrinterTurbo    Pixelle-Video    MoneyPrinterPlus    Labhaus
 (个人/快速)          (个人/全自动)     (批量/自动发布)      (企业/工作流)
 
 NarratoAI           Pixelle-MCP
@@ -196,7 +196,7 @@ NarratoAI           Pixelle-MCP
 | NarratoAI | 影视解说创作者 | 经常 | 低 |
 | MoneyPrinterPlus | 批量做号 | 每天 | 中 |
 | Pixelle-MCP | 开发者 | 开发时 | 高 |
-| **AI Content Pipeline** | **专业创作者/企业** | **每天** | **中** |
+| **Labhaus** | **专业创作者/企业** | **每天** | **中** |
 
 ---
 
@@ -526,7 +526,7 @@ NarratoAI           Pixelle-MCP
 | NarratoAI | "AI 一键解说影视，自动剪辑" |
 | MoneyPrinterPlus | "AI 批量生成+自动发布，批量做号" |
 | Pixelle-MCP | "让 AI 助手直接调用 ComfyUI" |
-| **AI Content Pipeline** | **"让专业团队 3 小时批量生产 100 个视频"** |
+| **Labhaus** | **"让专业团队 3 小时批量生产 100 个视频"** |
 
 ---
 
