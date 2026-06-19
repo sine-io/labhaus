@@ -88,19 +88,19 @@ func TestStyleRepository_Integration(t *testing.T) {
 		}
 	})
 
-	t.Run("FindByCategory", func(t *testing.T) {
+	t.Run("FindAll with category filter", func(t *testing.T) {
 		// Create style in specific category
 		entity, _ := style.New("Cyberpunk Style", "Futuristic neon art", "cyberpunk, neon, futuristic", "SciFi", []string{"cyberpunk"})
 		repo.Create(ctx, entity)
 
-		// Find by category
-		found, err := repo.FindByCategory(ctx, "SciFi")
+		// Find by category using Filter
+		found, err := repo.FindAll(ctx, style.Filter{Category: "SciFi"})
 		if err != nil {
-			t.Fatalf("FindByCategory() error = %v", err)
+			t.Fatalf("FindAll(Category) error = %v", err)
 		}
 
 		if len(found) == 0 {
-			t.Error("FindByCategory() should return at least 1 style")
+			t.Error("FindAll(Category) should return at least 1 style")
 		}
 	})
 
