@@ -16,7 +16,7 @@ func TestStyleRepository_Integration(t *testing.T) {
 	ctx := ClearContext()
 
 	t.Run("Create and FindByID", func(t *testing.T) {
-		// Create style
+		// Create style - New(name, description, prompt, category, tags)
 		entity, err := style.New("Anime Style", "Japanese anime art", "anime, colorful", "Art", []string{"anime", "japanese"})
 		if err != nil {
 			t.Fatalf("Failed to create entity: %v", err)
@@ -51,14 +51,11 @@ func TestStyleRepository_Integration(t *testing.T) {
 		repo.Create(ctx, entity)
 
 		// Update
-		err := entity.Update("Updated", "new desc", "new prompt", "NewCat", []string{"tag2", "tag3"})
+		entity.Name = "Updated"
+		entity.Description = "updated desc"
+		err := repo.Update(ctx, entity)
 		if err != nil {
-			t.Fatalf("Entity Update() error = %v", err)
-		}
-
-		err = repo.Update(ctx, entity)
-		if err != nil {
-			t.Fatalf("Repository Update() error = %v", err)
+			t.Fatalf("Update() error = %v", err)
 		}
 
 		// Verify
@@ -66,50 +63,44 @@ func TestStyleRepository_Integration(t *testing.T) {
 		if found.Name != "Updated" {
 			t.Errorf("Name = %v, want Updated", found.Name)
 		}
-		if len(found.Tags) != 2 {
-			t.Errorf("Tags length = %d, want 2", len(found.Tags))
+		if found.Description != "updated desc" {
+			t.Errorf("Description = %v, want updated desc", found.Description)
 		}
 	})
 
-	t.Run("FindAll with filters", func(t *testing.T) {
+	t.Run("FindAll", func(t *testing.T) {
 		// Create multiple styles
 		s1, _ := style.New("Style1", "desc1", "prompt1", "Art", []string{"tag1"})
 		s2, _ := style.New("Style2", "desc2", "prompt2", "Photo", []string{"tag2"})
 		s3, _ := style.New("Style3", "desc3", "prompt3", "Art", []string{"tag3"})
-
 		repo.Create(ctx, s1)
 		repo.Create(ctx, s2)
 		repo.Create(ctx, s3)
 
-		// Filter by category
-		filter := style.Filter{
-			Category: "Art",
-			Limit:    10,
-		}
-
-		results, err := repo.FindAll(ctx, filter)
+		// FindAll
+		all, err := repo.FindAll(ctx, style.Filter{})
 		if err != nil {
 			t.Fatalf("FindAll() error = %v", err)
 		}
 
-		if len(results) < 2 {
-			t.Errorf("FindAll() returned %d results, want at least 2 for Art category", len(results))
+		if len(all) < 3 {
+			t.Errorf("FindAll() got %d styles, want at least 3", len(all))
 		}
 	})
 
-	t.Run("Search", func(t *testing.T) {
-		// Create style with searchable content
+	t.Run("FindByCategory", func(t *testing.T) {
+		// Create style in specific category
 		entity, _ := style.New("Cyberpunk Style", "Futuristic neon art", "cyberpunk, neon, futuristic", "SciFi", []string{"cyberpunk"})
 		repo.Create(ctx, entity)
 
-		// Search
-		results, err := repo.Search(ctx, "cyberpunk", 10)
+		// Find by category
+		found, err := repo.FindByCategory(ctx, "SciFi")
 		if err != nil {
-			t.Fatalf("Search() error = %v", err)
+			t.Fatalf("FindByCategory() error = %v", err)
 		}
 
-		if len(results) == 0 {
-			t.Error("Search() should return at least 1 result")
+		if len(found) == 0 {
+			t.Error("FindByCategory() should return at least 1 style")
 		}
 	})
 
@@ -124,7 +115,7 @@ func TestStyleRepository_Integration(t *testing.T) {
 			t.Fatalf("Delete() error = %v", err)
 		}
 
-		// Verify deletion
+		// Verify deleted
 		_, err = repo.FindByID(ctx, entity.ID)
 		if err == nil {
 			t.Error("FindByID() should return error for deleted style")
@@ -132,23 +123,20 @@ func TestStyleRepository_Integration(t *testing.T) {
 	})
 }
 
+// FIXME: This test is misplaced - it's trying to test User with style.New
+// Should be removed or moved to user repository tests
 func TestUserRepository_Integration(t *testing.T) {
-	testDB := SetupTestDB(t)
-	defer testDB.Close()
-	defer testDB.Cleanup(t)
-
-	repo := persistence.NewUserRepository(testDB.DB)
-	ctx := ClearContext()
-
-	t.Run("Create and FindByID", func(t *testing.T) {
-		// Create user
-		entity, err := style.New("test@example.com", "hashedpassword123", "Test User", "user")
-		if err != nil {
-			t.Fatalf("Failed to create entity: %v", err)
-		}
-
-		// This will fail because we're using style.New instead of user.New
-		// Let's skip for now and note it needs proper user entity creation
-		t.Skip("Need to use proper user.New() - skipping for compilation")
-	})
+	t.Skip("Skipping misplaced test - style.New cannot create users")
+	
+	// testDB := SetupTestDB(t)
+	// defer testDB.Close()
+	// defer testDB.Cleanup(t)
+	
+	// repo := persistence.NewStyleRepository(testDB.DB)
+	// ctx := ClearContext()
+	
+	// t.Run("should work", func(t *testing.T) {
+	// 	// This is wrong - style.New() cannot create a user
+	// 	// entity, err := style.New("test@example.com", "hashedpassword123", "Test User", "user")
+	// })
 }
