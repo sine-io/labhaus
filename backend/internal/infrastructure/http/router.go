@@ -15,6 +15,7 @@ type Router struct {
 	styleHandler    *handlers.StyleHandler
 	userHandler     *handlers.UserHandler
 	workflowHandler *handlers.WorkflowHandler
+	imageHandler    *handlers.ImageHandler
 	jwtService      *auth.JWTService
 	logger          *logger.Logger
 }
@@ -25,6 +26,7 @@ func NewRouter(
 	styleHandler *handlers.StyleHandler,
 	userHandler *handlers.UserHandler,
 	workflowHandler *handlers.WorkflowHandler,
+	imageHandler *handlers.ImageHandler,
 	jwtService *auth.JWTService,
 	logger *logger.Logger,
 ) *Router {
@@ -41,6 +43,7 @@ func NewRouter(
 		styleHandler:    styleHandler,
 		userHandler:     userHandler,
 		workflowHandler: workflowHandler,
+		imageHandler:    imageHandler,
 		jwtService:      jwtService,
 		logger:          logger,
 	}
@@ -85,6 +88,15 @@ func (r *Router) Setup() {
 		workflows.GET("", r.workflowHandler.ListWorkflows)
 		workflows.GET("/:id", r.workflowHandler.GetWorkflow)
 		workflows.PATCH("/:id/status", r.workflowHandler.UpdateWorkflowStatus)
+	}
+
+	// Images (authenticated)
+	images := api.Group("/images")
+	images.Use(middleware.AuthMiddleware(r.jwtService))
+	{
+		images.POST("/generate", r.imageHandler.Generate)
+		images.GET("/:id", r.imageHandler.GetImage)
+		images.GET("/:id/progress", r.imageHandler.GetProgress)
 	}
 }
 

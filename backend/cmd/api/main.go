@@ -11,10 +11,12 @@ import (
 
 	"github.com/labhaus/backend/internal/application/command"
 	"github.com/labhaus/backend/internal/application/query"
+	imageapp "github.com/labhaus/backend/internal/application/service/image"
 	"github.com/labhaus/backend/internal/infrastructure/auth"
 	"github.com/labhaus/backend/internal/infrastructure/config"
 	httpInfra "github.com/labhaus/backend/internal/infrastructure/http"
 	"github.com/labhaus/backend/internal/infrastructure/http/handlers"
+	"github.com/labhaus/backend/internal/infrastructure/image/gptimage2"
 	"github.com/labhaus/backend/internal/infrastructure/logger"
 	"github.com/labhaus/backend/internal/infrastructure/persistence"
 	"github.com/labhaus/backend/internal/infrastructure/queue"
@@ -76,7 +78,7 @@ func main() {
 
 	// Initialize MinIO storage
 	log.Info("Initializing MinIO storage", "endpoint", cfg.MinIO.Endpoint, "access_key", cfg.MinIO.AccessKey, "use_ssl", cfg.MinIO.UseSSL)
-	
+
 	minioStorage, err := storage.NewMinIOStorage(
 		cfg.MinIO.Endpoint,
 		cfg.MinIO.AccessKey,
@@ -110,6 +112,31 @@ func main() {
 	}
 
 	log.Info("MinIO storage initialized", "endpoint", cfg.MinIO.Endpoint, "buckets", buckets)
+
+	imageProviderBaseURL := os.Getenv("LABHAUS_IMAGE_PROVIDER_BASE_URL")
+	if imageProviderBaseURL == "" {
+		imageProviderBaseURL = gptimage2.DefaultBaseURL
+	}
+	imageProvider, err := gptimage2.NewGPTImage2Provider(
+		os.Getenv("LABHAUS_IMAGE_PROVIDER_API_KEY"),
+		gptimage2.WithBaseURL(imageProviderBaseURL),
+	)
+	if err != nil {
+		log.Fatal("Failed to initialize image provider", err)
+	}
+
+	batchImageService := imageapp.NewBatchImageService(imageProvider, 10)
+
+	minioImageStorage, err := storage.NewMinIOImageStorage(storage.MinIOConfig{
+		Endpoint:        cfg.MinIO.Endpoint,
+		AccessKeyID:     cfg.MinIO.AccessKey,
+		SecretAccessKey: cfg.MinIO.SecretKey,
+		BucketName:      "images",
+		UseSSL:          cfg.MinIO.UseSSL,
+	})
+	if err != nil {
+		log.Fatal("Failed to initialize MinIO image storage", err)
+	}
 
 	// Initialize queue
 	taskQueue := queue.NewRedisQueue(redisClient, "labhaus")
@@ -152,9 +179,10 @@ func main() {
 	styleHandler := handlers.NewStyleHandler(styleQueryHandler, styleCommandHandler)
 	userHandler := handlers.NewUserHandler(userQueryHandler, userCommandHandler, jwtService)
 	workflowHandler := handlers.NewWorkflowHandler(workflowQueryHandler, workflowCommandHandler)
+	imageHandler := handlers.NewImageHandler(batchImageService, minioImageStorage)
 
 	// Setup router
-	router := httpInfra.NewRouter(healthHandler, styleHandler, userHandler, workflowHandler, jwtService, log)
+	router := httpInfra.NewRouter(healthHandler, styleHandler, userHandler, workflowHandler, imageHandler, jwtService, log)
 	router.Setup()
 
 	// Create HTTP server
