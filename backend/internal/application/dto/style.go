@@ -47,3 +47,27 @@ type StyleListResponse struct {
 	Limit  int        `json:"limit"`
 	Offset int        `json:"offset"`
 }
+
+// RecommendStyleRequest is the request for style recommendation
+type RecommendStyleRequest struct {
+	Query string `json:"query" binding:"required,min=1,max=500"`
+	Limit int    `json:"limit,omitempty" binding:"omitempty,min=1,max=50"`
+}
+
+// RecommendedStyle represents a single recommendation result
+type RecommendedStyle struct {
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Prompt      string   `json:"prompt"`
+	Category    string   `json:"category"`
+	Description string   `json:"description"`
+	Tags        []string `json:"tags"`
+	Score       float64  `json:"score"`
+}
+
+// RecommendStyleResponse is the response for style recommendation
+type RecommendStyleResponse struct {
+	Query           string             `json:"query"`
+	Recommendations []RecommendedStyle `json:"recommendations"`
+	Total           int                `json:"total"`
+}
