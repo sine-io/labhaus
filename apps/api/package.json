@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "migrate": "psql $DATABASE_URL -f migrations/001_create_styles.sql",
+    "test:e2e": "vitest run tests/e2e.test.ts",
+    "migrate": "psql $DATABASE_URL -f migrations/001_create_styles.sql && psql $DATABASE_URL -f migrations/002_create_users.sql",
     "import-styles": "tsx src/scripts/import-styles.ts"
   },
   "dependencies": {
