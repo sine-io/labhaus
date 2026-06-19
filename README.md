@@ -116,20 +116,22 @@ open http://localhost:3000
 ```
 labhaus/
 ├── backend/              # Go 后端服务
-│   ├── workflow-engine/  # 工作流引擎
-│   └── style-library/    # 样式库 API
-├── frontend/             # React 前端
-│   ├── editor/           # 🔥 可视化编辑器
-│   ├── gallery/          # 样式库展示
-│   └── marketplace/      # 模板市场
-├── infra/                # Docker & K8s
-└── docs/                 # 完整文档
+│   ├── cmd/api/         # 入口
+│   ├── internal/        # 私有代码
+│   │   ├── api/        # HTTP 层
+│   │   ├── service/    # 业务逻辑
+│   │   └── repository/ # 数据访问
+│   └── migrations/      # 数据库迁移
+├── apps/
+│   └── web/             # Next.js 前端 (规划中)
+├── packages/            # 共享包 (TypeScript)
+└── docs/                # 完整文档
 ```
 
 **技术栈**：
-- 前端：React + TypeScript + React Flow + TailwindCSS
-- 后端：Go + PostgreSQL + Redis
-- 工作流：自研状态机 + JSON Schema
+- 前端：React + TypeScript + Next.js + TailwindCSS
+- 后端：Go + Gin + PostgreSQL + Redis
+- 工作流：自研状态机 + Asynq 任务队列
 - 存储：MinIO / S3
 
 详细架构：[系统设计文档](docs/architecture/system-design.md)

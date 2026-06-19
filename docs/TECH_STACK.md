@@ -2,63 +2,60 @@
 
 ## 总览
 
-Labhaus 采用 **TypeScript 全栈**架构，基于现代化的 Web 技术栈构建。
+Labhaus 采用 **Go 后端 + TypeScript 前端**架构，基于现代化的技术栈构建。
 
-## 后端技术栈
+## 后端技术栈 (Go)
 
 ### 核心框架
-- **语言**: TypeScript 5.7+
-- **运行时**: Node.js 20+
-- **Web 框架**: Hono 4.7+ (轻量级高性能 Web 框架)
-  - 为什么选择 Hono？
-    - 比 Express 快 3-4 倍
-    - TypeScript 原生支持
-    - 中间件生态完善
-    - 边缘计算友好
+- **语言**: Go 1.21+
+- **Web 框架**: Gin
+  - 为什么选择 Gin？
+    - 性能优秀 (40x faster than Martini)
+    - 中间件生态成熟
+    - 社区活跃 (Star 75k+)
+    - 文档完善
 
 ### 数据层
 - **主数据库**: PostgreSQL 14+
   - 全文搜索 (FTS)
   - 数组类型支持
   - 事务保证
-- **缓存**: Redis 7+ (规划中)
+- **ORM**: GORM (常规 CRUD)
+- **SQL Builder**: sqlc (复杂查询，类型安全)
+- **缓存**: Redis 7+
 - **对象存储**: MinIO / Amazon S3
-  - 图片、视频存储
-  - CDN 集成
 
 ### 认证与安全
-- **认证**: JWT (jsonwebtoken)
+- **认证**: golang-jwt/jwt/v5
   - Access token (1小时过期)
   - Refresh token (7天过期)
-- **密码加密**: bcrypt (10 rounds)
-- **类型验证**: Zod
-  - 运行时类型校验
-  - 自动生成 TypeScript 类型
+- **密码加密**: golang.org/x/crypto/bcrypt
+- **数据验证**: go-playground/validator/v10
 
-### NLP / 推荐
-- **自然语言处理**: natural
-  - TF-IDF 算法
-  - 分词器
-  - 余弦相似度计算
+### 并发与任务
+- **任务队列**: Asynq (Redis-based)
+  - 持久化任务
+  - 失败重试
+  - 定时任务
+  - Dashboard 监控
+- **并发控制**: Goroutine + Channel
+
+### 配置与日志
+- **配置管理**: Viper
+  - 环境变量
+  - 配置文件
+  - 热重载
+- **日志**: zerolog
+  - 零分配，性能最佳
+  - 结构化日志
+  - 友好的 API
+
+### HTTP 客户端
+- **HTTP**: resty (类似 axios)
 
 ### 测试
-- **测试框架**: Vitest
-  - 快速的单元测试
-  - 与 Vite 生态集成
-- **E2E 测试**: 基于 Fetch API 的集成测试
-
-### 开发工具
-- **Monorepo**: Turborepo
-  - 并行构建
-  - 增量构建
-  - 缓存优化
-- **包管理器**: pnpm 9+
-  - 磁盘空间节省
-  - 严格的依赖管理
-- **代码规范**: 
-  - ESLint (代码检查)
-  - Prettier (代码格式化)
-  - TypeScript strict mode
+- **测试框架**: testing (标准库)
+- **断言**: testify
 
 ## 前端技术栈（规划中）
 
@@ -71,53 +68,34 @@ Labhaus 采用 **TypeScript 全栈**架构，基于现代化的 Web 技术栈构
 
 ### UI 库
 - **CSS 框架**: TailwindCSS 3+
-  - 原子化 CSS
-  - 响应式设计
-  - 暗色模式支持
 - **组件库**: shadcn/ui
-  - 可定制组件
-  - Radix UI 基础
-  - Tailwind 风格
 
 ### 可视化
 - **工作流编辑器**: React Flow
-  - 拖拽节点
-  - 连线交互
-  - 自定义节点
-- **图表**: Recharts / Chart.js
 
 ### 状态管理
 - **全局状态**: Zustand
-  - 轻量级
-  - TypeScript 友好
-  - 中间件支持
 
 ### 实时通信
 - **服务器推送**: Server-Sent Events (SSE)
-  - 任务进度更新
-  - 实时通知
 
 ## AI / 媒体处理（规划中）
 
 ### 图像生成
 - **OpenAI DALL-E 3** (API 集成)
 - **Stable Diffusion** (可选)
-- **Midjourney** (via Discord bot, 可选)
 
 ### 文本生成
 - **OpenAI GPT-4** (剧本生成)
-- **Prompt 工程**: Few-shot learning
 
 ### 语音合成
 - **Edge-TTS** (免费、高质量)
-- **OpenAI TTS** (备选)
 
 ### 视频处理
 - **FFmpeg**
   - 图片合成
   - 音频混合
   - 字幕渲染
-  - 格式转换
 
 ## 基础设施
 
@@ -129,12 +107,10 @@ Labhaus 采用 **TypeScript 全栈**架构，基于现代化的 Web 技术栈构
 ### CI/CD
 - **GitHub Actions**
   - 自动测试
-  - 类型检查
-  - 代码规范检查
+  - 代码检查
   - 自动部署 (规划中)
 
 ### 监控与日志（规划中）
-- **日志**: Winston / Pino
 - **APM**: Prometheus + Grafana
 - **错误追踪**: Sentry
 
@@ -148,18 +124,22 @@ Labhaus 采用 **TypeScript 全栈**架构，基于现代化的 Web 技术栈构
 └─────────────────────────────────────────────┘
                      ↓ REST API
 ┌─────────────────────────────────────────────┐
-│              API Gateway                     │
-│  Hono + 中间件 (日志/认证/CORS/限流)        │
+│              API Gateway (Go)                │
+│  Gin + 中间件 (日志/认证/CORS/限流)         │
 └─────────────────────────────────────────────┘
                      ↓
 ┌─────────────────────────────────────────────┐
-│              业务服务层                      │
-│  TypeScript + Zod + natural (NLP)           │
-│  JWT + bcrypt (认证)                        │
+│            业务服务层 (Go)                   │
+│  GORM + sqlc + validator + JWT              │
 └─────────────────────────────────────────────┘
                      ↓
 ┌─────────────────────────────────────────────┐
-│             AI / 媒体处理                    │
+│           任务队列 (Asynq)                   │
+│  批量任务 + 失败重试 + 定时任务              │
+└─────────────────────────────────────────────┘
+                     ↓
+┌─────────────────────────────────────────────┐
+│         AI / 媒体处理（规划中）              │
 │  OpenAI (GPT-4/DALL-E) + Edge-TTS + FFmpeg  │
 └─────────────────────────────────────────────┘
                      ↓
@@ -173,85 +153,118 @@ Labhaus 采用 **TypeScript 全栈**架构，基于现代化的 Web 技术栈构
 
 ```
 labhaus/
+├── backend/                      # Go 后端
+│   ├── cmd/
+│   │   └── api/
+│   │       └── main.go          # 入口
+│   ├── internal/
+│   │   ├── api/                 # HTTP 层
+│   │   │   ├── middleware/      # 中间件
+│   │   │   ├── routes/          # 路由
+│   │   │   └── handlers/        # 处理器
+│   │   ├── service/             # 业务逻辑
+│   │   │   ├── auth/
+│   │   │   ├── style/
+│   │   │   └── recommendation/
+│   │   ├── repository/          # 数据访问
+│   │   │   └── postgres/
+│   │   ├── model/               # 数据模型
+│   │   ├── config/              # 配置
+│   │   └── pkg/                 # 工具包
+│   ├── migrations/              # 数据库迁移
+│   ├── tests/                   # 测试
+│   └── go.mod
 ├── apps/
-│   ├── api/              # 后端 API (Hono + TypeScript)
-│   └── web/              # 前端 (Next.js, 规划中)
-├── packages/
-│   ├── types/            # 共享类型定义
-│   ├── workflow/         # 工作流引擎
-│   └── ui/               # UI 组件库 (规划中)
-├── docs/                 # 文档
-├── .github/              # GitHub Actions
-└── docker-compose.yml    # 开发环境
+│   └── web/                     # Next.js 前端 (规划中)
+├── packages/                    # TypeScript 共享包 (遗留)
+└── docs/                        # 文档
 ```
 
-## 依赖关系
+## Go 依赖 (go.mod)
 
-### 后端核心依赖
-```json
-{
-  "hono": "^4.7.9",
-  "pg": "^8.14.0",
-  "jsonwebtoken": "^9.0.2",
-  "bcrypt": "^5.1.1",
-  "zod": "^3.24.1",
-  "natural": "^8.0.1"
-}
+```go
+module github.com/sine-io/labhaus
+
+go 1.21
+
+require (
+    github.com/gin-gonic/gin v1.10.0           // Web 框架
+    gorm.io/gorm v1.25.5                       // ORM
+    gorm.io/driver/postgres v1.5.4             // PostgreSQL 驱动
+    github.com/google/uuid v1.5.0              // UUID
+    github.com/golang-jwt/jwt/v5 v5.2.0        // JWT
+    golang.org/x/crypto v0.17.0                // bcrypt
+    github.com/go-playground/validator/v10     // 验证
+    github.com/spf13/viper v1.18.2             // 配置
+    github.com/redis/go-redis/v9 v9.4.0        // Redis
+    github.com/hibiken/asynq v0.24.1           // 任务队列
+    github.com/minio/minio-go/v7 v7.0.66       // 对象存储
+    github.com/rs/zerolog v1.31.0              // 日志
+    github.com/go-resty/resty/v2 v2.11.0       // HTTP 客户端
+    github.com/stretchr/testify v1.8.4         // 测试
+)
 ```
 
-### 开发依赖
-```json
-{
-  "typescript": "^5.7.2",
-  "vitest": "^2.1.8",
-  "tsx": "^4.20.0",
-  "turbo": "^2.3.3"
-}
-```
+## 为什么选择 Go？
 
-## 为什么选择这个技术栈？
+### 性能优势
+✅ **并发性能**: Goroutine 比 Node.js async/await 高效 10x  
+✅ **内存占用**: 约 Node.js 的 1/3  
+✅ **API 吞吐量**: 2-3x TypeScript  
+✅ **启动时间**: < 1s (vs Node.js 2-3s)
 
-### TypeScript 全栈
-✅ **类型安全**: 编译时捕获错误  
-✅ **开发效率**: 智能提示和重构  
-✅ **代码质量**: 自文档化  
-✅ **团队协作**: 接口即契约
+### 工程优势
+✅ **类型安全**: 编译时错误检测  
+✅ **并发模型**: Goroutine + Channel 天然支持  
+✅ **部署简单**: 单一二进制文件  
+✅ **生态成熟**: 云原生工具首选语言
 
-### Hono over Express
-✅ **性能**: 3-4倍更快  
-✅ **现代化**: 原生 TypeScript  
-✅ **轻量级**: 核心 < 13KB  
-✅ **边缘友好**: 支持 Cloudflare Workers
+### 适合场景
+✅ 批量任务处理（图像生成、视频合成）  
+✅ 高并发 API 服务  
+✅ 长连接、实时通信  
+✅ 微服务架构
 
-### PostgreSQL
-✅ **功能强大**: 全文搜索、数组类型  
-✅ **可靠性**: ACID 事务保证  
-✅ **扩展性**: 丰富的插件生态  
-✅ **开源**: 无供应商锁定
+## 技术债务（TypeScript 遗留）
 
-### Turborepo + pnpm
-✅ **构建速度**: 并行 + 增量构建  
-✅ **磁盘节省**: pnpm 共享依赖  
-✅ **Monorepo**: 统一管理多包  
-✅ **缓存**: 本地 + 远程缓存
+### 已废弃
+- ❌ apps/api (TypeScript Hono)
+- ❌ packages/workflow (TypeScript)
+- ❌ packages/types (TypeScript)
 
-## 技术债务
+### 保留用途
+- 📦 仅作为 Phase 1 参考实现
+- 📦 前端开发时可复用类型定义
 
-### 当前限制
-- ⚠️ 无 Redis 缓存（内存限制）
-- ⚠️ 图像生成仅 Mock Provider
-- ⚠️ 无分布式任务队列
-- ⚠️ 无性能监控
+## 迁移计划
 
-### 后续优化
-- [ ] 引入 Redis 缓存层
-- [ ] 集成真实图像生成 API
-- [ ] 使用 BullMQ 任务队列
-- [ ] 添加 Prometheus 监控
-- [ ] 实现 API 请求去重
+### Phase 1: Go 基础框架 (Week 1)
+- ✅ 项目结构
+- ✅ Gin + 中间件
+- ✅ PostgreSQL + GORM
+- ✅ 配置 + 日志
+
+### Phase 2: 核心功能迁移 (Week 2)
+- ✅ 认证系统
+- ✅ 样式库 API
+- ✅ 推荐算法
+- ✅ 测试覆盖
+
+### Phase 3: 高级功能 (Week 3)
+- ✅ Redis 缓存
+- ✅ Asynq 任务队列
+- ✅ MinIO 集成
+- ✅ E2E 测试
+
+### Phase 4: 部署与文档 (Week 4)
+- ✅ Docker 配置
+- ✅ 性能测试
+- ✅ 文档更新
+- ✅ 上线准备
 
 ## 更多文档
 
-- [系统设计](./system-design.md)
-- [API 设计](./api-design.md)
-- [部署指南](../DEPLOYMENT.md)
+- [系统设计](./architecture/system-design.md)
+- [API 设计](./architecture/api-design.md)
+- [部署指南](./DEPLOYMENT.md)
+- [Go 迁移指南](./GO_MIGRATION.md) (待创建)
