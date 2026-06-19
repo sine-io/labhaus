@@ -1,4 +1,4 @@
-# AI Content Pipeline 点子深度分析报告
+# Labhaus 点子深度分析报告
 
 基于 Easy-Vibe 产品方法论的系统评估
 

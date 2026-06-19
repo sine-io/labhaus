@@ -1,15 +1,15 @@
-# Pixelle-Video vs AI Content Pipeline 对比分析
+# Pixelle-Video vs Labhaus 对比分析
 
 **分析日期**：2026-06-18  
 **对比项目**：
 - **Pixelle-Video**: https://github.com/AIDC-AI/Pixelle-Video (23k ⭐)
-- **AI Content Pipeline**: https://github.com/sine-io/ai-content-pipeline (新项目)
+- **Labhaus**: https://github.com/sine-io/labhaus (新项目)
 
 ---
 
 ## 一、基本信息对比
 
-| 维度 | Pixelle-Video | AI Content Pipeline |
+| 维度 | Pixelle-Video | Labhaus |
 |------|--------------|---------------------|
 | **Star 数** | 23,010 ⭐ | 0（新项目） |
 | **Fork 数** | 3,300 | 0 |
@@ -39,7 +39,7 @@
 
 ---
 
-### AI Content Pipeline 定位
+### Labhaus 定位
 
 **一句话**：可视化 AI 内容生产平台 - "Canva for AI Video Workflow"
 
@@ -60,7 +60,7 @@
 
 ### 功能矩阵
 
-| 功能 | Pixelle-Video | AI Content Pipeline | 差异分析 |
+| 功能 | Pixelle-Video | Labhaus | 差异分析 |
 |------|--------------|---------------------|---------|
 | **输入方式** | 主题文本 | 文章/文本/CSV/数据库 | 我们更灵活 |
 | **文案生成** | ✅ AI 自动生成 | ✅ LLM 生成 | 相同 |
@@ -96,7 +96,7 @@
 
 ---
 
-### AI Content Pipeline 架构（计划）
+### Labhaus 架构（计划）
 
 **技术栈**：
 - Python FastAPI（后端）
@@ -117,7 +117,7 @@
 
 ### 🔍 定位差异
 
-| 维度 | Pixelle-Video | AI Content Pipeline |
+| 维度 | Pixelle-Video | Labhaus |
 |------|--------------|---------------------|
 | **产品形态** | 工具 | 平台 |
 | **使用方式** | 全自动 | 可视化配置 |
@@ -150,7 +150,7 @@
    - 直连多种 API
    - 多种 TTS 方案
 
-#### AI Content Pipeline 的差异化优势 ✅
+#### Labhaus 的差异化优势 ✅
 
 1. **批量生产能力** 🔥
    - CSV 批量导入
@@ -194,14 +194,14 @@
 - 追求简单易用
 - 单次生成
 
-**AI Content Pipeline**：
+**Labhaus**：
 - 专业创作者
 - 需要批量生产
 - 工业化流程
 
 **类比**：
 - Pixelle-Video = 美图秀秀（傻瓜式）
-- AI Content Pipeline = Photoshop（专业工具）
+- Labhaus = Photoshop（专业工具）
 
 ---
 
@@ -212,7 +212,7 @@
 - 流程：输入主题 → 一键生成
 - 时间：5-10 分钟
 
-**AI Content Pipeline**：
+**Labhaus**：
 - 场景：批量生产 100 个视频
 - 流程：配置工作流 → CSV 导入 → 批量执行
 - 时间：1 小时配置 + 3 小时批量
@@ -226,7 +226,7 @@
 - 社区驱动
 - 无明确商业化路径
 
-**AI Content Pipeline**：
+**Labhaus**：
 - Freemium
 - 模板市场分成
 - 企业服务
@@ -368,7 +368,7 @@
 ### Pixelle-Video
 > "让普通人 5 分钟做出一个短视频"
 
-### AI Content Pipeline
+### Labhaus
 > "让专业创作者 3 小时批量生产 100 个视频"
 
 ---
@@ -389,7 +389,7 @@
 - "AI 视频生成工具"
 - 已经很红海了（Runway、Pika、Kling 等）
 
-**AI Content Pipeline**：
+**Labhaus**：
 - "AI 内容生产平台"
 - 蓝海，无直接竞品
 
