@@ -17,6 +17,8 @@ import (
 	"github.com/labhaus/backend/internal/infrastructure/http/handlers"
 	"github.com/labhaus/backend/internal/infrastructure/logger"
 	"github.com/labhaus/backend/internal/infrastructure/persistence"
+	"github.com/labhaus/backend/internal/infrastructure/queue"
+	"github.com/redis/go-redis/v9"
 )
 
 const version = "0.1.0"
@@ -56,6 +58,30 @@ func main() {
 	}
 
 	log.Info("Database migrations completed")
+
+	// Initialize Redis client
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port),
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
+	})
+
+	// Test Redis connection
+	if err := redisClient.Ping(context.Background()).Err(); err != nil {
+		log.Fatal("Failed to connect to Redis", err)
+	}
+
+	log.Info("Connected to Redis", "host", cfg.Redis.Host, "db", cfg.Redis.DB)
+
+	// Initialize queue
+	taskQueue := queue.NewRedisQueue(redisClient, "labhaus")
+
+	// Start queue worker
+	workerCtx, workerCancel := context.WithCancel(context.Background())
+	defer workerCancel()
+
+	taskQueue.StartWorker(workerCtx, queue.WorkflowTaskHandler())
+	log.Info("Queue worker started")
 
 	// Initialize password hasher
 	passwordHasher := persistence.NewBcryptHasher()
@@ -118,6 +144,17 @@ func main() {
 	// Graceful shutdown with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cfg.Server.ShutdownTimeout)*time.Second)
 	defer cancel()
+
+	// Stop queue worker
+	workerCancel()
+	if err := taskQueue.Close(); err != nil {
+		log.Error("Error closing queue", err)
+	}
+
+	// Close Redis connection
+	if err := redisClient.Close(); err != nil {
+		log.Error("Error closing Redis connection", err)
+	}
 
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatal("Server forced to shutdown", err)
