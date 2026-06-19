@@ -1,12 +1,14 @@
 import { Hono } from 'hono';
 import { styleQuerySchema } from '@labhaus/types';
 import { StyleRepository } from '../repositories/style.repository.js';
+import { ApiErrors, asyncHandler } from '../middleware/error-handler.js';
 
 const app = new Hono();
 const styleRepo = new StyleRepository();
 
-app.get('/', async (c) => {
-  try {
+app.get(
+  '/',
+  asyncHandler(async (c) => {
     const query = styleQuerySchema.parse({
       category: c.req.query('category'),
       style: c.req.query('style'),
@@ -29,29 +31,26 @@ app.get('/', async (c) => {
         totalPages,
       },
     });
-  } catch (error) {
-    console.error('Error fetching styles:', error);
-    if (error instanceof Error && error.name === 'ZodError') {
-      return c.json({ error: 'Invalid query parameters', details: error }, 400);
-    }
-    return c.json({ error: 'Internal server error' }, 500);
-  }
-});
+  })
+);
 
-app.get('/:id', async (c) => {
-  try {
+app.get(
+  '/:id',
+  asyncHandler(async (c) => {
     const id = c.req.param('id');
+    
+    if (!id) {
+      throw ApiErrors.badRequest('Style ID is required');
+    }
+    
     const style = await styleRepo.findById(id);
 
     if (!style) {
-      return c.json({ error: 'Style not found' }, 404);
+      throw ApiErrors.notFound('Style');
     }
 
     return c.json(style);
-  } catch (error) {
-    console.error('Error fetching style:', error);
-    return c.json({ error: 'Internal server error' }, 500);
-  }
-});
+  })
+);
 
 export default app;
