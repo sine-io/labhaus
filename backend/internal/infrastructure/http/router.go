@@ -78,6 +78,7 @@ func (r *Router) Setup() {
 		styles.GET("", r.styleHandler.ListStyles)
 		styles.GET("/:id", r.styleHandler.GetStyle)
 		styles.POST("", r.styleHandler.CreateStyle)
+		styles.POST("/recommend", r.styleHandler.Recommend)
 	}
 
 	// Workflows (authenticated)

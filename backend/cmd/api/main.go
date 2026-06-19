@@ -12,6 +12,7 @@ import (
 	"github.com/labhaus/backend/internal/application/command"
 	"github.com/labhaus/backend/internal/application/query"
 	imageapp "github.com/labhaus/backend/internal/application/service/image"
+	"github.com/labhaus/backend/internal/domain/style"
 	"github.com/labhaus/backend/internal/infrastructure/auth"
 	"github.com/labhaus/backend/internal/infrastructure/config"
 	httpInfra "github.com/labhaus/backend/internal/infrastructure/http"
@@ -164,6 +165,13 @@ func main() {
 	userRepo := persistence.NewUserRepository(db)
 	workflowRepo := persistence.NewWorkflowRepository(db)
 
+	styles, err := styleRepo.FindAll(context.Background(), style.Filter{})
+	if err != nil {
+		log.Fatal("Failed to load styles for recommender", err)
+	}
+	styleRecommender := handlers.NewStyleRecommender(styles)
+	log.Info("Style recommender initialized", "styles_count", len(styles))
+
 	// Initialize application services
 	styleQueryHandler := query.NewStyleQueryHandler(styleRepo)
 	styleCommandHandler := command.NewStyleCommandHandler(styleRepo)
@@ -176,7 +184,7 @@ func main() {
 
 	// Initialize HTTP handlers
 	healthHandler := handlers.NewHealthHandler(version)
-	styleHandler := handlers.NewStyleHandler(styleQueryHandler, styleCommandHandler)
+	styleHandler := handlers.NewStyleHandler(styleQueryHandler, styleCommandHandler, styleRecommender)
 	userHandler := handlers.NewUserHandler(userQueryHandler, userCommandHandler, jwtService)
 	workflowHandler := handlers.NewWorkflowHandler(workflowQueryHandler, workflowCommandHandler)
 	imageHandler := handlers.NewImageHandler(batchImageService, minioImageStorage)
