@@ -2,7 +2,9 @@ package http
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/labhaus/backend/internal/infrastructure/auth"
 	"github.com/labhaus/backend/internal/infrastructure/http/handlers"
+	"github.com/labhaus/backend/internal/infrastructure/http/middleware"
 	"github.com/labhaus/backend/internal/infrastructure/logger"
 )
 
@@ -11,6 +13,8 @@ type Router struct {
 	engine        *gin.Engine
 	healthHandler *handlers.HealthHandler
 	styleHandler  *handlers.StyleHandler
+	userHandler   *handlers.UserHandler
+	jwtService    *auth.JWTService
 	logger        *logger.Logger
 }
 
@@ -18,6 +22,8 @@ type Router struct {
 func NewRouter(
 	healthHandler *handlers.HealthHandler,
 	styleHandler *handlers.StyleHandler,
+	userHandler *handlers.UserHandler,
+	jwtService *auth.JWTService,
 	logger *logger.Logger,
 ) *Router {
 	gin.SetMode(gin.ReleaseMode)
@@ -31,6 +37,8 @@ func NewRouter(
 		engine:        engine,
 		healthHandler: healthHandler,
 		styleHandler:  styleHandler,
+		userHandler:   userHandler,
+		jwtService:    jwtService,
 		logger:        logger,
 	}
 }
@@ -42,8 +50,24 @@ func (r *Router) Setup() {
 	// Health check
 	api.GET("/health", r.healthHandler.Check)
 
-	// Styles
+	// User routes (public)
+	users := api.Group("/users")
+	{
+		users.POST("/register", r.userHandler.Register)
+		users.POST("/login", r.userHandler.Login)
+	}
+
+	// User routes (authenticated)
+	usersAuth := api.Group("/users")
+	usersAuth.Use(middleware.AuthMiddleware(r.jwtService))
+	{
+		usersAuth.GET("/me", r.userHandler.GetMe)
+		usersAuth.PATCH("/me", r.userHandler.UpdateMe)
+	}
+
+	// Styles (authenticated)
 	styles := api.Group("/styles")
+	styles.Use(middleware.AuthMiddleware(r.jwtService))
 	{
 		styles.GET("", r.styleHandler.ListStyles)
 		styles.GET("/:id", r.styleHandler.GetStyle)

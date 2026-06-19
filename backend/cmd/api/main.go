@@ -11,6 +11,7 @@ import (
 
 	"github.com/labhaus/backend/internal/application/command"
 	"github.com/labhaus/backend/internal/application/query"
+	"github.com/labhaus/backend/internal/infrastructure/auth"
 	"github.com/labhaus/backend/internal/infrastructure/config"
 	httpInfra "github.com/labhaus/backend/internal/infrastructure/http"
 	"github.com/labhaus/backend/internal/infrastructure/http/handlers"
@@ -56,21 +57,36 @@ func main() {
 
 	log.Info("Database migrations completed")
 
+	// Initialize password hasher
+	passwordHasher := persistence.NewBcryptHasher()
+
+	// Initialize JWT service
+	jwtService := auth.NewJWTService(
+		cfg.JWT.SecretKey,
+		time.Duration(cfg.JWT.TokenDuration)*time.Hour,
+	)
+
+	log.Info("JWT service initialized", "token_duration_hours", cfg.JWT.TokenDuration)
+
 	// Initialize repositories
 	styleRepo := persistence.NewStyleRepository(db)
-	// userRepo := persistence.NewUserRepository(db)
+	userRepo := persistence.NewUserRepository(db)
 	// workflowRepo := persistence.NewWorkflowRepository(db)
 
 	// Initialize application services
 	styleQueryHandler := query.NewStyleQueryHandler(styleRepo)
 	styleCommandHandler := command.NewStyleCommandHandler(styleRepo)
 
+	userQueryHandler := query.NewUserQueryHandler(userRepo, passwordHasher)
+	userCommandHandler := command.NewUserCommandHandler(userRepo, passwordHasher)
+
 	// Initialize HTTP handlers
 	healthHandler := handlers.NewHealthHandler(version)
 	styleHandler := handlers.NewStyleHandler(styleQueryHandler, styleCommandHandler)
+	userHandler := handlers.NewUserHandler(userQueryHandler, userCommandHandler, jwtService)
 
 	// Setup router
-	router := httpInfra.NewRouter(healthHandler, styleHandler, log)
+	router := httpInfra.NewRouter(healthHandler, styleHandler, userHandler, jwtService, log)
 	router.Setup()
 
 	// Create HTTP server

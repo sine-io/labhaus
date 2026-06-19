@@ -65,6 +65,8 @@ services:
       LABHAUS_REDIS_PORT: "6379"
       LABHAUS_LOG_LEVEL: "debug"
       LABHAUS_LOG_FORMAT: "console"
+      LABHAUS_JWT_SECRET_KEY: "dev-secret-key-change-in-production"
+      LABHAUS_JWT_TOKEN_DURATION: "24"
     ports:
       - "8080:8080"
     depends_on:

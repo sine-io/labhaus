@@ -13,6 +13,7 @@ type Config struct {
 	Database DatabaseConfig
 	Redis    RedisConfig
 	Log      LogConfig
+	JWT      JWTConfig
 }
 
 type ServerConfig struct {
@@ -42,6 +43,11 @@ type LogConfig struct {
 	Format string // "json" or "console"
 }
 
+type JWTConfig struct {
+	SecretKey       string
+	TokenDuration   int // hours
+}
+
 // Load reads configuration from environment variables
 func Load() (*Config, error) {
 	v := viper.New()
@@ -66,14 +72,29 @@ func Load() (*Config, error) {
 	v.SetDefault("log.level", "info")
 	v.SetDefault("log.format", "json")
 
+	v.SetDefault("jwt.secret_key", "your-secret-key-change-in-production")
+	v.SetDefault("jwt.token_duration", 24) // 24 hours
+
 	// Read from environment variables
 	v.SetEnvPrefix("LABHAUS")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 
+	// Bind specific environment variables for nested structures
+	v.BindEnv("jwt.secret_key", "LABHAUS_JWT_SECRET_KEY")
+	v.BindEnv("jwt.token_duration", "LABHAUS_JWT_TOKEN_DURATION")
+
 	var config Config
 	if err := v.Unmarshal(&config); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+	}
+
+	// Manual override for JWT config (Viper nested struct issue)
+	if v.IsSet("jwt.secret_key") {
+		config.JWT.SecretKey = v.GetString("jwt.secret_key")
+	}
+	if v.IsSet("jwt.token_duration") {
+		config.JWT.TokenDuration = v.GetInt("jwt.token_duration")
 	}
 
 	return &config, nil
