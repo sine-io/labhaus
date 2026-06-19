@@ -118,6 +118,32 @@ func (h *WorkflowCommandHandler) CancelWorkflow(ctx context.Context, workflowID 
 	return toWorkflowDTO(entity), nil
 }
 
+// UpdateWorkflowState updates workflow to a specific state with validation
+func (h *WorkflowCommandHandler) UpdateWorkflowState(ctx context.Context, workflowID string, stateStr string) (*dto.WorkflowDTO, error) {
+	entity, err := h.repo.FindByID(ctx, workflowID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert string to State
+	newState := workflow.State(stateStr)
+	if !newState.IsValid() {
+		return nil, errors.New("invalid state")
+	}
+
+	// Validate transition
+	if err := entity.TransitionTo(newState); err != nil {
+		return nil, err
+	}
+
+	// Update in repository
+	if err := h.repo.UpdateState(ctx, workflowID, newState); err != nil {
+		return nil, err
+	}
+
+	return toWorkflowDTO(entity), nil
+}
+
 // CompleteWorkflow marks workflow as completed with result
 func (h *WorkflowCommandHandler) CompleteWorkflow(ctx context.Context, workflowID string, imageURLs []string, duration time.Duration) (*dto.WorkflowDTO, error) {
 	entity, err := h.repo.FindByID(ctx, workflowID)

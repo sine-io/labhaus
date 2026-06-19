@@ -10,12 +10,13 @@ import (
 
 // Router holds all HTTP handlers and routes
 type Router struct {
-	engine        *gin.Engine
-	healthHandler *handlers.HealthHandler
-	styleHandler  *handlers.StyleHandler
-	userHandler   *handlers.UserHandler
-	jwtService    *auth.JWTService
-	logger        *logger.Logger
+	engine          *gin.Engine
+	healthHandler   *handlers.HealthHandler
+	styleHandler    *handlers.StyleHandler
+	userHandler     *handlers.UserHandler
+	workflowHandler *handlers.WorkflowHandler
+	jwtService      *auth.JWTService
+	logger          *logger.Logger
 }
 
 // NewRouter creates a new HTTP router
@@ -23,6 +24,7 @@ func NewRouter(
 	healthHandler *handlers.HealthHandler,
 	styleHandler *handlers.StyleHandler,
 	userHandler *handlers.UserHandler,
+	workflowHandler *handlers.WorkflowHandler,
 	jwtService *auth.JWTService,
 	logger *logger.Logger,
 ) *Router {
@@ -34,12 +36,13 @@ func NewRouter(
 	engine.Use(gin.Recovery())
 
 	return &Router{
-		engine:        engine,
-		healthHandler: healthHandler,
-		styleHandler:  styleHandler,
-		userHandler:   userHandler,
-		jwtService:    jwtService,
-		logger:        logger,
+		engine:          engine,
+		healthHandler:   healthHandler,
+		styleHandler:    styleHandler,
+		userHandler:     userHandler,
+		workflowHandler: workflowHandler,
+		jwtService:      jwtService,
+		logger:          logger,
 	}
 }
 
@@ -72,6 +75,16 @@ func (r *Router) Setup() {
 		styles.GET("", r.styleHandler.ListStyles)
 		styles.GET("/:id", r.styleHandler.GetStyle)
 		styles.POST("", r.styleHandler.CreateStyle)
+	}
+
+	// Workflows (authenticated)
+	workflows := api.Group("/workflows")
+	workflows.Use(middleware.AuthMiddleware(r.jwtService))
+	{
+		workflows.POST("", r.workflowHandler.CreateWorkflow)
+		workflows.GET("", r.workflowHandler.ListWorkflows)
+		workflows.GET("/:id", r.workflowHandler.GetWorkflow)
+		workflows.PATCH("/:id/status", r.workflowHandler.UpdateWorkflowStatus)
 	}
 }
 

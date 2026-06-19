@@ -138,9 +138,13 @@ func (r *WorkflowRepository) UpdateState(ctx context.Context, id string, state w
 
 // toModel converts domain entity to database model
 func (r *WorkflowRepository) toModel(w *workflow.Entity) (*WorkflowModel, error) {
-	// Marshal config to JSON
+	// Convert config to JSONB
 	configJSON, err := json.Marshal(w.Config)
 	if err != nil {
+		return nil, err
+	}
+	var configMap JSONB
+	if err := json.Unmarshal(configJSON, &configMap); err != nil {
 		return nil, err
 	}
 
@@ -149,18 +153,22 @@ func (r *WorkflowRepository) toModel(w *workflow.Entity) (*WorkflowModel, error)
 		UserID:    w.UserID,
 		StyleID:   w.StyleID,
 		State:     string(w.State),
-		Config:    string(configJSON),
+		Config:    configMap,
 		CreatedAt: w.CreatedAt,
 		UpdatedAt: w.UpdatedAt,
 	}
 
-	// Marshal result to JSON if present
+	// Convert result to JSONB if present
 	if w.Result != nil {
 		resultJSON, err := json.Marshal(w.Result)
 		if err != nil {
 			return nil, err
 		}
-		model.Result = string(resultJSON)
+		var resultMap JSONB
+		if err := json.Unmarshal(resultJSON, &resultMap); err != nil {
+			return nil, err
+		}
+		model.Result = resultMap
 	}
 
 	return model, nil
@@ -168,9 +176,13 @@ func (r *WorkflowRepository) toModel(w *workflow.Entity) (*WorkflowModel, error)
 
 // toEntity converts database model to domain entity
 func (r *WorkflowRepository) toEntity(m *WorkflowModel) (*workflow.Entity, error) {
-	// Unmarshal config from JSON
+	// Convert config from JSONB
+	configJSON, err := json.Marshal(m.Config)
+	if err != nil {
+		return nil, err
+	}
 	var config workflow.Config
-	if err := json.Unmarshal([]byte(m.Config), &config); err != nil {
+	if err := json.Unmarshal(configJSON, &config); err != nil {
 		return nil, err
 	}
 
@@ -184,10 +196,14 @@ func (r *WorkflowRepository) toEntity(m *WorkflowModel) (*workflow.Entity, error
 		UpdatedAt: m.UpdatedAt,
 	}
 
-	// Unmarshal result from JSON if present
-	if m.Result != "" {
+	// Convert result from JSONB if present
+	if m.Result != nil {
+		resultJSON, err := json.Marshal(m.Result)
+		if err != nil {
+			return nil, err
+		}
 		var result workflow.Result
-		if err := json.Unmarshal([]byte(m.Result), &result); err != nil {
+		if err := json.Unmarshal(resultJSON, &result); err != nil {
 			return nil, err
 		}
 		entity.Result = &result

@@ -71,7 +71,7 @@ func main() {
 	// Initialize repositories
 	styleRepo := persistence.NewStyleRepository(db)
 	userRepo := persistence.NewUserRepository(db)
-	// workflowRepo := persistence.NewWorkflowRepository(db)
+	workflowRepo := persistence.NewWorkflowRepository(db)
 
 	// Initialize application services
 	styleQueryHandler := query.NewStyleQueryHandler(styleRepo)
@@ -80,13 +80,17 @@ func main() {
 	userQueryHandler := query.NewUserQueryHandler(userRepo, passwordHasher)
 	userCommandHandler := command.NewUserCommandHandler(userRepo, passwordHasher)
 
+	workflowQueryHandler := query.NewWorkflowQueryHandler(workflowRepo)
+	workflowCommandHandler := command.NewWorkflowCommandHandler(workflowRepo)
+
 	// Initialize HTTP handlers
 	healthHandler := handlers.NewHealthHandler(version)
 	styleHandler := handlers.NewStyleHandler(styleQueryHandler, styleCommandHandler)
 	userHandler := handlers.NewUserHandler(userQueryHandler, userCommandHandler, jwtService)
+	workflowHandler := handlers.NewWorkflowHandler(workflowQueryHandler, workflowCommandHandler)
 
 	// Setup router
-	router := httpInfra.NewRouter(healthHandler, styleHandler, userHandler, jwtService, log)
+	router := httpInfra.NewRouter(healthHandler, styleHandler, userHandler, workflowHandler, jwtService, log)
 	router.Setup()
 
 	// Create HTTP server
