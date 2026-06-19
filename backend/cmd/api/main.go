@@ -18,6 +18,7 @@ import (
 	"github.com/labhaus/backend/internal/infrastructure/logger"
 	"github.com/labhaus/backend/internal/infrastructure/persistence"
 	"github.com/labhaus/backend/internal/infrastructure/queue"
+	"github.com/labhaus/backend/internal/infrastructure/storage"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -72,6 +73,43 @@ func main() {
 	}
 
 	log.Info("Connected to Redis", "host", cfg.Redis.Host, "db", cfg.Redis.DB)
+
+	// Initialize MinIO storage
+	log.Info("Initializing MinIO storage", "endpoint", cfg.MinIO.Endpoint, "access_key", cfg.MinIO.AccessKey, "use_ssl", cfg.MinIO.UseSSL)
+	
+	minioStorage, err := storage.NewMinIOStorage(
+		cfg.MinIO.Endpoint,
+		cfg.MinIO.AccessKey,
+		cfg.MinIO.SecretKey,
+		cfg.MinIO.UseSSL,
+	)
+	if err != nil {
+		log.Fatal("Failed to initialize MinIO storage", err)
+	}
+
+	// Create default buckets with retry
+	ctx := context.Background()
+	buckets := []string{"workflows", "images", "videos", "temp"}
+	for _, bucket := range buckets {
+		// Retry up to 5 times with exponential backoff
+		var bucketErr error
+		for attempt := 1; attempt <= 5; attempt++ {
+			bucketErr = minioStorage.EnsureBucket(ctx, bucket)
+			if bucketErr == nil {
+				break
+			}
+			if attempt < 5 {
+				waitTime := time.Duration(attempt) * time.Second
+				log.Warn("Failed to create bucket, retrying", "bucket", bucket, "attempt", attempt, "wait", waitTime, "error", bucketErr)
+				time.Sleep(waitTime)
+			}
+		}
+		if bucketErr != nil {
+			log.Fatal("Failed to create bucket after retries", bucketErr, "bucket", bucket)
+		}
+	}
+
+	log.Info("MinIO storage initialized", "endpoint", cfg.MinIO.Endpoint, "buckets", buckets)
 
 	// Initialize queue
 	taskQueue := queue.NewRedisQueue(redisClient, "labhaus")

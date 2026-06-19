@@ -12,6 +12,7 @@ type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
 	Redis    RedisConfig
+	MinIO    MinIOConfig
 	Log      LogConfig
 	JWT      JWTConfig
 }
@@ -36,6 +37,13 @@ type RedisConfig struct {
 	Port     int
 	Password string
 	DB       int
+}
+
+type MinIOConfig struct {
+	Endpoint  string
+	AccessKey string
+	SecretKey string
+	UseSSL    bool
 }
 
 type LogConfig struct {
@@ -69,6 +77,11 @@ func Load() (*Config, error) {
 	v.SetDefault("redis.password", "")
 	v.SetDefault("redis.db", 0)
 
+	v.SetDefault("minio.endpoint", "localhost:9000")
+	v.SetDefault("minio.access_key", "minioadmin")
+	v.SetDefault("minio.secret_key", "minioadmin")
+	v.SetDefault("minio.use_ssl", false)
+
 	v.SetDefault("log.level", "info")
 	v.SetDefault("log.format", "json")
 
@@ -83,6 +96,10 @@ func Load() (*Config, error) {
 	// Bind specific environment variables for nested structures
 	v.BindEnv("jwt.secret_key", "LABHAUS_JWT_SECRET_KEY")
 	v.BindEnv("jwt.token_duration", "LABHAUS_JWT_TOKEN_DURATION")
+	v.BindEnv("minio.endpoint", "LABHAUS_MINIO_ENDPOINT")
+	v.BindEnv("minio.access_key", "LABHAUS_MINIO_ACCESS_KEY")
+	v.BindEnv("minio.secret_key", "LABHAUS_MINIO_SECRET_KEY")
+	v.BindEnv("minio.use_ssl", "LABHAUS_MINIO_USE_SSL")
 
 	var config Config
 	if err := v.Unmarshal(&config); err != nil {
@@ -95,6 +112,20 @@ func Load() (*Config, error) {
 	}
 	if v.IsSet("jwt.token_duration") {
 		config.JWT.TokenDuration = v.GetInt("jwt.token_duration")
+	}
+
+	// Manual override for MinIO config (Viper nested struct issue)
+	if v.IsSet("minio.endpoint") {
+		config.MinIO.Endpoint = v.GetString("minio.endpoint")
+	}
+	if v.IsSet("minio.access_key") {
+		config.MinIO.AccessKey = v.GetString("minio.access_key")
+	}
+	if v.IsSet("minio.secret_key") {
+		config.MinIO.SecretKey = v.GetString("minio.secret_key")
+	}
+	if v.IsSet("minio.use_ssl") {
+		config.MinIO.UseSSL = v.GetBool("minio.use_ssl")
 	}
 
 	return &config, nil
