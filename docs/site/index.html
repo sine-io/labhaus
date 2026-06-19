@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Labhaus - AI Agent Lab Workspace | 为 AI 代理团队设计的实验室工作空间">
+    <meta property="og:title" content="Labhaus - AI Agent Lab Workspace">
+    <meta property="og:description" content="Experiment. Automate. Scale. 为 AI 代理团队提供结构化、可追溯的协作环境。">
+    <meta property="og:image" content="https://raw.githubusercontent.com/sine-io/labhaus/master/.github/brand/social-card.png">
+    <title>Labhaus - AI Agent Lab Workspace</title>
+    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/sine-io/labhaus/master/.github/brand/favicon.ico">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+            line-height: 1.6;
+            color: #1E293B;
+            background: linear-gradient(135deg, #0EA5E9 0%, #10B981 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        header {
+            text-align: center;
+            padding: 4rem 0 2rem;
+        }
+        
+        .logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 2rem;
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        h1 {
+            color: white;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .tagline {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 4rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: white;
+            color: #0EA5E9;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.25);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-card h3 {
+            color: #0EA5E9;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-card p {
+            color: #64748B;
+            line-height: 1.8;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        footer a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .tagline {
+                font-size: 1.2rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <img src="https://raw.githubusercontent.com/sine-io/labhaus/master/.github/brand/logo-128.png" alt="Labhaus Logo">
+            </div>
+            <div class="status-badge">🚧 Early Development</div>
+            <h1>Labhaus</h1>
+            <p class="tagline">Experiment. Automate. Scale.</p>
+            <p class="subtitle">为 AI 代理团队设计的实验室工作空间</p>
+            
+            <div class="cta-buttons">
+                <a href="https://github.com/sine-io/labhaus" class="btn btn-primary" target="_blank">
+                    📦 View on GitHub
+                </a>
+                <a href="https://github.com/sine-io/labhaus#readme" class="btn btn-secondary" target="_blank">
+                    📖 Documentation
+                </a>
+            </div>
+        </header>
+        
+        <main>
+            <section class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">🧪</div>
+                    <h3>实验驱动</h3>
+                    <p>提供结构化的实验环境，让 AI 代理能够安全地探索、测试和验证想法。</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>多代理协作</h3>
+                    <p>支持多个 AI 代理并行工作，通过清晰的工作流编排实现高效协作。</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>可追溯性</h3>
+                    <p>完整记录每个实验的过程和结果，确保工作可复现、可审计。</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>自动化优先</h3>
+                    <p>将重复性工作自动化，让人类专注于创造性决策和系统设计。</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🔧</div>
+                    <h3>灵活扩展</h3>
+                    <p>模块化架构设计，支持自定义工作流和第三方服务集成。</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>生产就绪</h3>
+                    <p>从实验到生产的完整路径，支持快速迭代和规模化部署。</p>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>
+                Made with ❤️ by the Labhaus Team | 
+                <a href="https://github.com/sine-io/labhaus/blob/master/LICENSE" target="_blank">MIT License</a> | 
+                <a href="https://github.com/sine-io/labhaus/issues" target="_blank">Report Issues</a>
+            </p>
+            <p style="margin-top: 1rem; font-size: 0.9rem;">
+                © 2026 Labhaus. All rights reserved.
+            </p>
+        </footer>
+    </div>
+</body>
+</html>
