@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { serve } from '@hono/node-server';
 import stylesRouter from './routes/styles.js';
+import authRouter from './routes/auth.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { requestLogger, securityHeaders, rateLimit } from './middleware/index.js';
 
@@ -39,12 +40,14 @@ api.get('/', (c) =>
     endpoints: {
       health: '/api/health',
       styles: '/api/styles',
+      auth: '/api/auth',
     },
   })
 );
 
 // Mount routes
 api.route('/styles', stylesRouter);
+api.route('/auth', authRouter);
 
 // Mount API under /api prefix
 app.route('/api', api);

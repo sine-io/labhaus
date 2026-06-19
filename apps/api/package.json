@@ -17,11 +17,15 @@
   "dependencies": {
     "@hono/node-server": "^1.14.3",
     "@labhaus/types": "workspace:*",
+    "bcrypt": "^5.1.1",
     "hono": "^4.7.9",
+    "jsonwebtoken": "^9.0.2",
     "pg": "^8.14.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.10.5",
     "@types/pg": "^8.11.10",
     "tsx": "^4.20.0",
