@@ -11,7 +11,7 @@ _Experiment. Automate. Scale._
 可视化 AI 内容生产平台 - 让专业团队批量生产 AI 视频的工作流实验室
 
 [![Status](https://img.shields.io/badge/status-MVP%20开发中-0EA5E9)](https://github.com/sine-io/labhaus)
-[![License](https://img.shields.io/badge/license-MIT-10B981)](LICENSE)
+[![License](https://img.shields.io/badge/license-AGPL--3.0-10B981)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-10B981)](https://github.com/sine-io/labhaus/pulls)
 
 [English](README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
