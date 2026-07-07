@@ -9,12 +9,13 @@ import (
 
 // Config holds all application configuration
 type Config struct {
-	Server   ServerConfig
-	Database DatabaseConfig
-	Redis    RedisConfig
-	MinIO    MinIOConfig
-	Log      LogConfig
-	JWT      JWTConfig
+	Server        ServerConfig
+	Database      DatabaseConfig
+	Redis         RedisConfig
+	MinIO         MinIOConfig
+	ImageProvider ImageProviderConfig
+	Log           LogConfig
+	JWT           JWTConfig
 }
 
 type ServerConfig struct {
@@ -46,14 +47,19 @@ type MinIOConfig struct {
 	UseSSL    bool
 }
 
+type ImageProviderConfig struct {
+	BaseURL string
+	APIKey  string
+}
+
 type LogConfig struct {
 	Level  string
 	Format string // "json" or "console"
 }
 
 type JWTConfig struct {
-	SecretKey       string
-	TokenDuration   int // hours
+	SecretKey     string
+	TokenDuration int // hours
 }
 
 // Load reads configuration from environment variables
@@ -82,6 +88,9 @@ func Load() (*Config, error) {
 	v.SetDefault("minio.secret_key", "minioadmin")
 	v.SetDefault("minio.use_ssl", false)
 
+	v.SetDefault("image_provider.base_url", "")
+	v.SetDefault("image_provider.api_key", "")
+
 	v.SetDefault("log.level", "info")
 	v.SetDefault("log.format", "json")
 
@@ -100,6 +109,8 @@ func Load() (*Config, error) {
 	v.BindEnv("minio.access_key", "LABHAUS_MINIO_ACCESS_KEY")
 	v.BindEnv("minio.secret_key", "LABHAUS_MINIO_SECRET_KEY")
 	v.BindEnv("minio.use_ssl", "LABHAUS_MINIO_USE_SSL")
+	v.BindEnv("image_provider.base_url", "LABHAUS_IMAGE_PROVIDER_BASE_URL")
+	v.BindEnv("image_provider.api_key", "LABHAUS_IMAGE_PROVIDER_API_KEY")
 
 	var config Config
 	if err := v.Unmarshal(&config); err != nil {
@@ -126,6 +137,20 @@ func Load() (*Config, error) {
 	}
 	if v.IsSet("minio.use_ssl") {
 		config.MinIO.UseSSL = v.GetBool("minio.use_ssl")
+	}
+
+	if v.IsSet("image_provider.base_url") {
+		config.ImageProvider.BaseURL = strings.TrimSpace(v.GetString("image_provider.base_url"))
+	}
+	if v.IsSet("image_provider.api_key") {
+		config.ImageProvider.APIKey = strings.TrimSpace(v.GetString("image_provider.api_key"))
+	}
+
+	if config.ImageProvider.BaseURL == "" {
+		return nil, fmt.Errorf("LABHAUS_IMAGE_PROVIDER_BASE_URL is required")
+	}
+	if config.ImageProvider.APIKey == "" {
+		return nil, fmt.Errorf("LABHAUS_IMAGE_PROVIDER_API_KEY is required")
 	}
 
 	return &config, nil

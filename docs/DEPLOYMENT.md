@@ -1,5 +1,7 @@
 # Labhaus 部署指南
 
+> **当前状态**：本文大部分内容来自早期 TypeScript API（`apps/api`，端口 3001）部署方案，现作为 legacy/reference 保留。当前主线是 Go 后端 `backend/`（端口 8080）+ `apps/web/`。新部署步骤请优先参考 `README.md`、`backend/README.md` 和 `docs/guides/quick-start.md`。
+
 ## 环境要求
 
 - **操作系统**: Linux (推荐 Ubuntu 20.04+)
@@ -35,6 +37,7 @@ pnpm dev
 ```
 
 访问：
+
 - API: http://localhost:3001
 - PostgreSQL: localhost:5432
 - Redis: localhost:6379
@@ -190,6 +193,7 @@ curl http://localhost:3001/api/health
 ```
 
 预期响应：
+
 ```json
 {
   "status": "ok",
@@ -237,6 +241,7 @@ find $BACKUP_DIR -name "labhaus_*.sql.gz" -mtime +7 -delete
 ```
 
 添加到 crontab：
+
 ```bash
 0 2 * * * /path/to/backup-script.sh
 ```

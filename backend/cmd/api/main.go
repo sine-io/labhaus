@@ -114,13 +114,9 @@ func main() {
 
 	log.Info("MinIO storage initialized", "endpoint", cfg.MinIO.Endpoint, "buckets", buckets)
 
-	imageProviderBaseURL := os.Getenv("LABHAUS_IMAGE_PROVIDER_BASE_URL")
-	if imageProviderBaseURL == "" {
-		imageProviderBaseURL = gptimage2.DefaultBaseURL
-	}
 	imageProvider, err := gptimage2.NewGPTImage2Provider(
-		os.Getenv("LABHAUS_IMAGE_PROVIDER_API_KEY"),
-		gptimage2.WithBaseURL(imageProviderBaseURL),
+		cfg.ImageProvider.APIKey,
+		gptimage2.WithBaseURL(cfg.ImageProvider.BaseURL),
 	)
 	if err != nil {
 		log.Fatal("Failed to initialize image provider", err)

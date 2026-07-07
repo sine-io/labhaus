@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+:root {
+  /* 深色玻璃态主题 - 灵感来自 awesome-gpt-image-2 */
+  --color-bg-base: #060914;
+  --color-bg-glass: rgba(9, 15, 32, 0.68);
+  --color-text-primary: #eef5ff;
+  --color-text-secondary: #b7c7df;
+  --color-text-muted: #9aaac0;
+  
+  /* 青色主色调 */
+  --color-accent-cyan: #50e7ff;
+  --color-accent-cyan-light: #9eeeff;
+  --color-accent-cyan-dim: #67e8f9;
+  
+  /* 玻璃态边框和阴影 */
+  --color-border-glass: rgba(255, 255, 255, 0.12);
+  --color-border-glow: rgba(103, 232, 249, 0.62);
+  
+  /* 渐变光晕 */
+  --glow-cyan: rgba(47, 211, 255, 0.18);
+  --glow-pink: rgba(255, 73, 167, 0.16);
+}
+
+@theme inline {
+  --color-bg-base: var(--color-bg-base);
+  --color-bg-glass: var(--color-bg-glass);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
+  --color-accent-cyan: var(--color-accent-cyan);
+  --color-accent-cyan-light: var(--color-accent-cyan-light);
+  --color-border-glass: var(--color-border-glass);
+  --color-border-glow: var(--color-border-glow);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  margin: 0;
+  background: 
+    radial-gradient(circle at 12% 8%, var(--glow-cyan), transparent 28rem),
+    radial-gradient(circle at 88% 0%, var(--glow-pink), transparent 30rem),
+    linear-gradient(180deg, #060914 0%, #0b1020 48%, #080b14 100%);
+  color: var(--color-text-primary);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-synthesis: none;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 玻璃态卡片基础样式 */
+.glass-card {
+  border: 1px solid var(--color-border-glass);
+  background: var(--color-bg-glass);
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(18px);
+}
+
+/* 玻璃态按钮基础样式 */
+.glass-button {
+  border: 1px solid var(--color-border-glass);
+  background: var(--color-bg-glass);
+  color: var(--color-text-primary);
+  font-weight: 900;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.28);
+  transition: all 180ms ease;
+}
+
+.glass-button:hover {
+  border-color: var(--color-border-glow);
+  background: rgba(103, 232, 249, 0.13);
+  color: #ffffff;
+}
+
+/* 输入框样式 */
+.glass-input {
+  border: 1px solid var(--color-border-glass);
+  background: var(--color-bg-glass);
+  color: var(--color-text-primary);
+  backdrop-filter: blur(18px);
+}
+
+.glass-input:focus {
+  outline: none;
+  border-color: var(--color-border-glow);
+  box-shadow: 0 0 0 3px rgba(103, 232, 249, 0.1);
+}
+
+/* 顶部导航栏 */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(18px);
+}

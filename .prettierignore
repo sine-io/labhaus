@@ -6,3 +6,6 @@ build
 coverage
 *.log
 .env*.local
+package-lock.json
+next-env.d.ts
+*.tsbuildinfo

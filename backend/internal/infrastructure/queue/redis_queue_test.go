@@ -93,10 +93,7 @@ func TestRedisQueue_Worker(t *testing.T) {
 		t.Fatal("Task was not processed")
 	}
 
-	// Check task status
-	status, err := q.GetTaskStatus(ctx, task.ID)
-	require.NoError(t, err)
-	assert.Equal(t, queue.TaskStateCompleted, status.State)
+	waitForTaskState(t, ctx, q, task.ID, queue.TaskStateCompleted, 2*time.Second)
 }
 
 func TestRedisQueue_Retry(t *testing.T) {
@@ -142,11 +139,7 @@ func TestRedisQueue_Retry(t *testing.T) {
 
 	assert.Equal(t, 3, attempts)
 
-	// Check final status
-	time.Sleep(500 * time.Millisecond)
-	status, err := q.GetTaskStatus(ctx, task.ID)
-	require.NoError(t, err)
-	assert.Equal(t, queue.TaskStateCompleted, status.State)
+	waitForTaskState(t, ctx, q, task.ID, queue.TaskStateCompleted, 2*time.Second)
 }
 
 func TestRedisQueue_DeadLetterQueue(t *testing.T) {
@@ -172,12 +165,42 @@ func TestRedisQueue_DeadLetterQueue(t *testing.T) {
 	err := q.Enqueue(ctx, task)
 	require.NoError(t, err)
 
-	// Wait for all retries to exhaust
-	time.Sleep(3 * time.Second)
-
-	// Check task moved to dead state
-	status, err := q.GetTaskStatus(ctx, task.ID)
-	require.NoError(t, err)
+	status := waitForTaskState(t, ctx, q, task.ID, queue.TaskStateDead, 5*time.Second)
 	assert.Equal(t, queue.TaskStateDead, status.State)
 	assert.NotEmpty(t, status.Error)
+}
+
+func waitForTaskState(t *testing.T, ctx context.Context, q *queue.RedisQueue, taskID, expectedState string, timeout time.Duration) *queue.TaskStatus {
+	t.Helper()
+
+	deadline := time.Now().Add(timeout)
+	var lastStatus *queue.TaskStatus
+	var lastErr error
+
+	for time.Now().Before(deadline) {
+		status, err := q.GetTaskStatus(ctx, taskID)
+		if err == nil {
+			lastStatus = status
+			if status.State == expectedState {
+				return status
+			}
+		} else {
+			lastErr = err
+		}
+
+		select {
+		case <-ctx.Done():
+			t.Fatalf("context ended waiting for task %s to reach %s: %v", taskID, expectedState, ctx.Err())
+		case <-time.After(10 * time.Millisecond):
+		}
+	}
+
+	if lastErr != nil {
+		t.Fatalf("timed out waiting for task %s to reach %s; last error: %v", taskID, expectedState, lastErr)
+	}
+	if lastStatus == nil {
+		t.Fatalf("timed out waiting for task %s to reach %s; no status observed", taskID, expectedState)
+	}
+	t.Fatalf("timed out waiting for task %s to reach %s; last state: %s", taskID, expectedState, lastStatus.State)
+	return nil
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { WorkflowExecutor, WorkflowExecutionError } from '../src/workflow-executor';
+import { WorkflowExecutor } from '../src/workflow-executor';
 import {
   WorkflowDefinition,
   WorkflowExecution,
@@ -26,9 +26,7 @@ describe('WorkflowExecutor', () => {
       const workflow: WorkflowDefinition = {
         id: crypto.randomUUID(),
         name: 'Test Workflow',
-        nodes: [
-          { id: 'node1', type: NodeType.INPUT, name: 'Input', inputs: [], outputs: [] },
-        ],
+        nodes: [{ id: 'node1', type: NodeType.INPUT, name: 'Input', inputs: [], outputs: [] }],
         edges: [],
         version: 1,
         created_at: new Date().toISOString(),
@@ -60,9 +58,7 @@ describe('WorkflowExecutor', () => {
       const workflow: WorkflowDefinition = {
         id: crypto.randomUUID(),
         name: 'Test Workflow',
-        nodes: [
-          { id: 'node1', type: NodeType.INPUT, name: 'Input', inputs: [], outputs: [] },
-        ],
+        nodes: [{ id: 'node1', type: NodeType.INPUT, name: 'Input', inputs: [], outputs: [] }],
         edges: [],
         version: 1,
         created_at: new Date().toISOString(),
@@ -107,12 +103,12 @@ describe('WorkflowExecutor', () => {
     it('should execute a simple workflow', async () => {
       const inputHandler: NodeHandler = {
         type: NodeType.INPUT,
-        execute: async (node, context) => ({ input_value: 'test' }),
+        execute: async () => ({ input_value: 'test' }),
       };
 
       const processHandler: NodeHandler = {
         type: NodeType.PROCESS,
-        execute: async (node, context) => ({
+        execute: async (_node, context) => ({
           output_value: `processed-${context.input_value}`,
         }),
       };
@@ -166,9 +162,7 @@ describe('WorkflowExecutor', () => {
       const workflow: WorkflowDefinition = {
         id: crypto.randomUUID(),
         name: 'Failing Workflow',
-        nodes: [
-          { id: 'fail', type: NodeType.PROCESS, name: 'Fail', inputs: [], outputs: [] },
-        ],
+        nodes: [{ id: 'fail', type: NodeType.PROCESS, name: 'Fail', inputs: [], outputs: [] }],
         edges: [],
         version: 1,
         created_at: new Date().toISOString(),

@@ -9,9 +9,7 @@ export class InvalidStatusTransition extends Error {
     public current: WorkflowStatus,
     public target: WorkflowStatus
   ) {
-    super(
-      `Invalid workflow transition for execution ${executionId}: ${current} -> ${target}`
-    );
+    super(`Invalid workflow transition for execution ${executionId}: ${current} -> ${target}`);
     this.name = 'InvalidStatusTransition';
   }
 }

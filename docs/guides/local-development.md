@@ -1,5 +1,7 @@
 # 开发指南
 
+> **当前状态**：本文包含早期 TypeScript API 工作流，现作为 legacy/reference 保留。当前主线是 Go 后端 `backend/` + Next 前端 `apps/web/`；新开发请优先参考 `docs/guides/quick-start.md`。
+
 ## 环境要求
 
 - Node.js >= 20.0.0
@@ -92,15 +94,18 @@ pnpm clean
 ## Docker 服务
 
 ### PostgreSQL
+
 - 端口: 5432
 - 数据库: labhaus
 - 用户名: labhaus
 - 密码: labhaus_dev_password
 
 ### Redis
+
 - 端口: 6379
 
 ### MinIO
+
 - API 端口: 9000
 - Console 端口: 9001
 - 用户名: minioadmin

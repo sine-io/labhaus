@@ -1,5 +1,7 @@
 # Labhaus API 设计文档
 
+> **当前状态**：本文描述早期 TypeScript API（`apps/api`，`/api/auth/*`，端口 3001）契约，现作为 legacy/reference 保留。当前主线 Go 后端使用 `/api/users/*`、`/api/styles/*`、`/api/images/*`，端口 8080；以 `backend/README.md` 和运行时代码为准。
+
 ## API 基础
 
 **Base URL**: `http://localhost:3001/api`  
@@ -18,6 +20,7 @@ Authorization: Bearer <access_token>  # 需要认证的端点
 ### 响应格式
 
 **成功响应** (2xx):
+
 ```json
 {
   "data": { ... },
@@ -31,6 +34,7 @@ Authorization: Bearer <access_token>  # 需要认证的端点
 ```
 
 **错误响应** (4xx/5xx):
+
 ```json
 {
   "error": "ERROR_CODE",
@@ -41,16 +45,16 @@ Authorization: Bearer <access_token>  # 需要认证的端点
 
 ### 错误码
 
-| 状态码 | 错误码 | 说明 |
-|--------|--------|------|
-| 400 | BAD_REQUEST | 请求参数错误 |
-| 400 | VALIDATION_ERROR | 数据验证失败 |
-| 401 | UNAUTHORIZED | 未认证或 token 无效 |
-| 403 | FORBIDDEN | 无权访问 |
-| 404 | NOT_FOUND | 资源不存在 |
-| 409 | CONFLICT | 资源冲突（如重复注册）|
-| 429 | RATE_LIMIT_EXCEEDED | 超过速率限制 |
-| 500 | INTERNAL_ERROR | 服务器内部错误 |
+| 状态码 | 错误码              | 说明                   |
+| ------ | ------------------- | ---------------------- |
+| 400    | BAD_REQUEST         | 请求参数错误           |
+| 400    | VALIDATION_ERROR    | 数据验证失败           |
+| 401    | UNAUTHORIZED        | 未认证或 token 无效    |
+| 403    | FORBIDDEN           | 无权访问               |
+| 404    | NOT_FOUND           | 资源不存在             |
+| 409    | CONFLICT            | 资源冲突（如重复注册） |
+| 429    | RATE_LIMIT_EXCEEDED | 超过速率限制           |
+| 500    | INTERNAL_ERROR      | 服务器内部错误         |
 
 ## 端点列表
 
@@ -61,6 +65,7 @@ Authorization: Bearer <access_token>  # 需要认证的端点
 **描述**: 服务健康检查
 
 **响应**:
+
 ```json
 {
   "status": "ok",
@@ -75,6 +80,7 @@ Authorization: Bearer <access_token>  # 需要认证的端点
 **描述**: 获取 API 版本和端点列表
 
 **响应**:
+
 ```json
 {
   "name": "Labhaus API",
@@ -109,12 +115,14 @@ Authorization: Bearer <access_token>  # 需要认证的端点
 | limit | integer | 否 | 每页数量（默认 20，最大 100）|
 
 **示例**:
+
 ```bash
 GET /api/styles?category=UI%20%26%20Interfaces&limit=10
 GET /api/styles?search=portrait&page=2
 ```
 
 **响应**:
+
 ```json
 {
   "styles": [
@@ -149,14 +157,17 @@ GET /api/styles?search=portrait&page=2
 **描述**: 根据 ID 获取单个样式详情
 
 **路径参数**:
+
 - `id` (uuid): 样式 ID
 
 **示例**:
+
 ```bash
 GET /api/styles/550e8400-e29b-41d4-a716-446655440000
 ```
 
 **响应**:
+
 ```json
 {
   "id": "uuid",
@@ -174,6 +185,7 @@ GET /api/styles/550e8400-e29b-41d4-a716-446655440000
 **描述**: 基于查询文本推荐相关样式（TF-IDF + 余弦相似度）
 
 **请求体**:
+
 ```json
 {
   "query": "modern minimalist UI design",
@@ -182,6 +194,7 @@ GET /api/styles/550e8400-e29b-41d4-a716-446655440000
 ```
 
 **响应**:
+
 ```json
 {
   "query": "modern minimalist UI design",
@@ -202,14 +215,17 @@ GET /api/styles/550e8400-e29b-41d4-a716-446655440000
 **描述**: 查找与指定样式相似的其他样式
 
 **查询参数**:
+
 - `limit` (integer): 返回数量（默认 10，最大 50）
 
 **示例**:
+
 ```bash
 GET /api/styles/550e8400-e29b-41d4-a716-446655440000/similar?limit=5
 ```
 
 **响应**:
+
 ```json
 {
   "style_id": "uuid",
@@ -234,15 +250,17 @@ GET /api/styles/550e8400-e29b-41d4-a716-446655440000/similar?limit=5
 **描述**: 注册新用户账号
 
 **请求体**:
+
 ```json
 {
   "email": "user@example.com",
   "password": "SecurePassword123!",
-  "name": "John Doe"  // 可选
+  "name": "John Doe" // 可选
 }
 ```
 
 **响应** (201):
+
 ```json
 {
   "user": {
@@ -268,6 +286,7 @@ GET /api/styles/550e8400-e29b-41d4-a716-446655440000/similar?limit=5
 **描述**: 使用邮箱和密码登录
 
 **请求体**:
+
 ```json
 {
   "email": "user@example.com",
@@ -276,6 +295,7 @@ GET /api/styles/550e8400-e29b-41d4-a716-446655440000/similar?limit=5
 ```
 
 **响应** (200):
+
 ```json
 {
   "user": { ... },
@@ -290,6 +310,7 @@ GET /api/styles/550e8400-e29b-41d4-a716-446655440000/similar?limit=5
 **描述**: 使用 refresh token 获取新的 access token
 
 **请求体**:
+
 ```json
 {
   "refresh_token": "eyJhbGc..."
@@ -297,6 +318,7 @@ GET /api/styles/550e8400-e29b-41d4-a716-446655440000/similar?limit=5
 ```
 
 **响应** (200):
+
 ```json
 {
   "tokens": {
@@ -315,11 +337,13 @@ GET /api/styles/550e8400-e29b-41d4-a716-446655440000/similar?limit=5
 **描述**: 获取当前认证用户信息
 
 **Headers**:
+
 ```
 Authorization: Bearer <access_token>
 ```
 
 **响应** (200):
+
 ```json
 {
   "user": {
@@ -337,12 +361,13 @@ Authorization: Bearer <access_token>
 
 ## 速率限制
 
-| 环境 | 限制 |
-|------|------|
-| 开发环境 | 无限制 |
+| 环境     | 限制                 |
+| -------- | -------------------- |
+| 开发环境 | 无限制               |
 | 生产环境 | 100 请求/分钟 per IP |
 
 **速率限制响应头**:
+
 ```
 X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 95

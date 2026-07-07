@@ -8,7 +8,8 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format": "prettier --write \".github/workflows/ci.yml\" \"apps/web/**/*.{ts,tsx,js,jsx,json,md}\" \"packages/workflow/src/**/*.ts\" \"packages/workflow/tests/**/*.ts\" \"packages/*/package.json\" \"apps/api/package.json\" \"apps/api/tsconfig.json\" \"package.json\" \"pnpm-workspace.yaml\" \"turbo.json\" \"README.md\" \"backend/README.md\" \"docs/TECH_STACK.md\" \"docs/DEPLOYMENT.md\" \"docs/architecture/api-design.md\" \"docs/guides/quick-start.md\" \"docs/guides/local-development.md\" \"docs/planning/mvp-roadmap.md\" \"docs/superpowers/**/*.md\"",
+    "format:check": "prettier --check \".github/workflows/ci.yml\" \"apps/web/**/*.{ts,tsx,js,jsx,json,md}\" \"packages/workflow/src/**/*.ts\" \"packages/workflow/tests/**/*.ts\" \"packages/*/package.json\" \"apps/api/package.json\" \"apps/api/tsconfig.json\" \"package.json\" \"pnpm-workspace.yaml\" \"turbo.json\" \"README.md\" \"backend/README.md\" \"docs/TECH_STACK.md\" \"docs/DEPLOYMENT.md\" \"docs/architecture/api-design.md\" \"docs/guides/quick-start.md\" \"docs/guides/local-development.md\" \"docs/planning/mvp-roadmap.md\" \"docs/superpowers/**/*.md\"",
     "clean": "turbo run clean && rm -rf node_modules"
   },
   "devDependencies": {

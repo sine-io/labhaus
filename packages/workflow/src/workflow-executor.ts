@@ -2,10 +2,8 @@ import {
   WorkflowDefinition,
   WorkflowExecution,
   WorkflowNode,
-  WorkflowEdge,
   NodeHandler,
   WorkflowStatus,
-  NodeStatus,
 } from './types.js';
 import { transitionWorkflowStatus } from './workflow-state.js';
 
@@ -159,11 +157,7 @@ export class WorkflowExecutor {
 
     // Validate node if handler provides validation
     if (handler.validate && !handler.validate(node)) {
-      throw new WorkflowExecutionError(
-        `Node validation failed: ${node.id}`,
-        '',
-        node.id
-      );
+      throw new WorkflowExecutionError(`Node validation failed: ${node.id}`, '', node.id);
     }
 
     // Execute node

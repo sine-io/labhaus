@@ -4,9 +4,23 @@
 
 Labhaus 采用 **Go 后端 + TypeScript 前端**架构，基于现代化的技术栈构建。
 
+## 当前主线
+
+当前可执行主线是：
+
+- `backend/`：Go API 服务，负责认证、样式、工作流元数据、批量生图、MinIO 存储。
+- `apps/web/`：Next.js App Router 前端，负责样式推荐和批量生图页面。
+
+以下目录仅作为 legacy/reference 使用，除非单独恢复为主线：
+
+- `apps/api/`：早期 TypeScript Hono API。
+- `packages/workflow/`、`packages/types/`：早期 TypeScript 共享包。
+- `frontend/`：早期 Next.js 前端草稿，当前不在 pnpm workspace 中。
+
 ## 后端技术栈 (Go)
 
 ### 核心框架
+
 - **语言**: Go 1.21+
 - **Web 框架**: Gin
   - 为什么选择 Gin？
@@ -16,6 +30,7 @@ Labhaus 采用 **Go 后端 + TypeScript 前端**架构，基于现代化的技�
     - 文档完善
 
 ### 数据层
+
 - **主数据库**: PostgreSQL 14+
   - 全文搜索 (FTS)
   - 数组类型支持
@@ -26,6 +41,7 @@ Labhaus 采用 **Go 后端 + TypeScript 前端**架构，基于现代化的技�
 - **对象存储**: MinIO / Amazon S3
 
 ### 认证与安全
+
 - **认证**: golang-jwt/jwt/v5
   - Access token (1小时过期)
   - Refresh token (7天过期)
@@ -33,6 +49,7 @@ Labhaus 采用 **Go 后端 + TypeScript 前端**架构，基于现代化的技�
 - **数据验证**: go-playground/validator/v10
 
 ### 并发与任务
+
 - **任务队列**: Asynq (Redis-based)
   - 持久化任务
   - 失败重试
@@ -41,6 +58,7 @@ Labhaus 采用 **Go 后端 + TypeScript 前端**架构，基于现代化的技�
 - **并发控制**: Goroutine + Channel
 
 ### 配置与日志
+
 - **配置管理**: Viper
   - 环境变量
   - 配置文件
@@ -51,47 +69,58 @@ Labhaus 采用 **Go 后端 + TypeScript 前端**架构，基于现代化的技�
   - 友好的 API
 
 ### HTTP 客户端
+
 - **HTTP**: resty (类似 axios)
 
 ### 测试
+
 - **测试框架**: testing (标准库)
 - **断言**: testify
 
-## 前端技术栈（规划中）
+## 前端技术栈（当前主线）
 
 ### 核心框架
-- **框架**: React 18
-- **路由**: Next.js 14 (App Router)
+
+- **框架**: React 19
+- **路由**: Next.js 16 (App Router)
   - 服务端渲染 (SSR)
   - 静态生成 (SSG)
   - API Routes
 
 ### UI 库
+
 - **CSS 框架**: TailwindCSS 3+
 - **组件库**: shadcn/ui
 
-### 可视化
-- **工作流编辑器**: React Flow
+### 可视化（后续阶段）
+
+- **工作流编辑器**: React Flow（尚未进入当前 MVP）
 
 ### 状态管理
+
 - **全局状态**: Zustand
 
 ### 实时通信
+
 - **服务器推送**: Server-Sent Events (SSE)
 
-## AI / 媒体处理（规划中）
+## AI / 媒体处理
 
 ### 图像生成
-- **OpenAI DALL-E 3** (API 集成)
-- **Stable Diffusion** (可选)
 
-### 文本生成
+- **显式配置的图像 Provider**：通过 `LABHAUS_IMAGE_PROVIDER_BASE_URL` 和 `LABHAUS_IMAGE_PROVIDER_API_KEY` 配置。
+- **OpenAI / 自建服务 / 本地 mock**：通过 Provider 适配层接入。
+
+### 文本生成（后续阶段）
+
 - **OpenAI GPT-4** (剧本生成)
 
-### 语音合成
+### 语音合成（后续阶段）
+
 - **Edge-TTS** (免费、高质量)
 
-### 视频处理
+### 视频处理（后续阶段）
+
 - **FFmpeg**
   - 图片合成
   - 音频混合
@@ -100,17 +129,20 @@ Labhaus 采用 **Go 后端 + TypeScript 前端**架构，基于现代化的技�
 ## 基础设施
 
 ### 容器化
+
 - **Docker**
 - **Docker Compose** (开发环境)
 - **Kubernetes** (生产环境规划)
 
 ### CI/CD
+
 - **GitHub Actions**
   - 自动测试
   - 代码检查
   - 自动部署 (规划中)
 
 ### 监控与日志（规划中）
+
 - **APM**: Prometheus + Grafana
 - **错误追踪**: Sentry
 
@@ -118,9 +150,9 @@ Labhaus 采用 **Go 后端 + TypeScript 前端**架构，基于现代化的技�
 
 ```
 ┌─────────────────────────────────────────────┐
-│             前端层（规划中）                 │
-│  React 18 + Next.js 14 + TailwindCSS        │
-│  React Flow + Zustand + shadcn/ui           │
+│              前端层（当前主线）              │
+│  apps/web: React 19 + Next.js 16 + Tailwind │
+│  样式推荐 + 批量生图                         │
 └─────────────────────────────────────────────┘
                      ↓ REST API
 ┌─────────────────────────────────────────────┐
@@ -139,8 +171,8 @@ Labhaus 采用 **Go 后端 + TypeScript 前端**架构，基于现代化的技�
 └─────────────────────────────────────────────┘
                      ↓
 ┌─────────────────────────────────────────────┐
-│         AI / 媒体处理（规划中）              │
-│  OpenAI (GPT-4/DALL-E) + Edge-TTS + FFmpeg  │
+│              图像 Provider                   │
+│  Configured HTTP image provider             │
 └─────────────────────────────────────────────┘
                      ↓
 ┌─────────────────────────────────────────────┐
@@ -179,7 +211,8 @@ labhaus/
 │   │   └── e2e/
 │   └── go.mod
 ├── apps/
-│   └── web/                         # Next.js 前端 (规划中)
+│   └── web/                         # Next.js 前端（当前主线）
+├── frontend/                         # legacy 草稿，默认忽略
 └── docs/                            # 文档
 ```
 
@@ -211,24 +244,28 @@ require (
 ## 为什么选择 Go？
 
 ### 性能优势
+
 ✅ **并发性能**: Goroutine 比 Node.js async/await 高效 10x  
 ✅ **内存占用**: 约 Node.js 的 1/3  
 ✅ **API 吞吐量**: 2-3x TypeScript  
 ✅ **启动时间**: < 1s (vs Node.js 2-3s)
 
 ### 工程优势
+
 ✅ **类型安全**: 编译时错误检测  
 ✅ **并发模型**: Goroutine + Channel 天然支持  
 ✅ **部署简单**: 单一二进制文件  
 ✅ **生态成熟**: 云原生工具首选语言
 
 ### 架构优势
+
 ✅ **DDD Lite**: 轻量级领域驱动设计  
 ✅ **CQRS**: 命令查询职责分离  
 ✅ **Clean Architecture**: 整洁架构，依赖倒置  
 ✅ **TDD**: 测试驱动开发
 
 ### 适合场景
+
 ✅ 批量任务处理（图像生成、视频合成）  
 ✅ 高并发 API 服务  
 ✅ 长连接、实时通信  
@@ -236,36 +273,43 @@ require (
 
 ## 技术债务（TypeScript 遗留）
 
-### 已废弃
+### Legacy/reference
+
 - ❌ apps/api (TypeScript Hono)
-- ❌ packages/workflow (TypeScript)
-- ❌ packages/types (TypeScript)
+- 📦 packages/workflow (TypeScript workflow reference)
+- 📦 packages/types (TypeScript type reference)
+- ❌ frontend (legacy Next.js draft)
 
 ### 保留用途
+
 - 📦 仅作为 Phase 1 参考实现
 - 📦 前端开发时可复用类型定义
 
 ## 迁移计划
 
 ### Phase 1: Go 基础框架 (Week 1)
+
 - ✅ 项目结构
 - ✅ Gin + 中间件
 - ✅ PostgreSQL + GORM
 - ✅ 配置 + 日志
 
 ### Phase 2: 核心功能迁移 (Week 2)
+
 - ✅ 认证系统
 - ✅ 样式库 API
 - ✅ 推荐算法
 - ✅ 测试覆盖
 
 ### Phase 3: 高级功能 (Week 3)
+
 - ✅ Redis 缓存
 - ✅ Asynq 任务队列
 - ✅ MinIO 集成
 - ✅ E2E 测试
 
 ### Phase 4: 部署与文档 (Week 4)
+
 - ✅ Docker 配置
 - ✅ 性能测试
 - ✅ 文档更新

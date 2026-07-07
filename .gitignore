@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+package-lock.json
 __pycache__/
 *.pyc
 *.pyo
@@ -65,3 +66,10 @@ uploads/
 # User uploaded content
 user-data/
 generated-videos/
+
+# Legacy local draft kept outside the active pnpm workspace
+frontend/
+
+# Local binaries
+bin/
+main

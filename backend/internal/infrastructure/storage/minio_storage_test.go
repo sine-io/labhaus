@@ -12,6 +12,7 @@ import (
 func TestMinIOStorage(t *testing.T) {
 	// Skip if MinIO is not available
 	endpoint := os.Getenv("MINIO_ENDPOINT")
+	isExplicitEndpoint := endpoint != ""
 	if endpoint == "" {
 		endpoint = "localhost:9000"
 	}
@@ -25,6 +26,15 @@ func TestMinIOStorage(t *testing.T) {
 	bucket := "test-bucket"
 	objectName := "test-file.txt"
 	content := []byte("Hello, MinIO!")
+
+	availabilityCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+	if err := storage.EnsureBucket(availabilityCtx, bucket); err != nil {
+		if isExplicitEndpoint {
+			t.Fatalf("Configured MinIO endpoint is not usable: %v", err)
+		}
+		t.Skipf("MinIO not available: %v", err)
+	}
 
 	// Test EnsureBucket
 	t.Run("EnsureBucket", func(t *testing.T) {

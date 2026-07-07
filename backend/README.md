@@ -57,6 +57,7 @@ docker compose down
 ### 2. 本地开发
 
 **前置条件：**
+
 - Go 1.25+
 - PostgreSQL 16+
 - Redis 7+
@@ -80,17 +81,24 @@ go run cmd/api/main.go
 
 通过环境变量配置（前缀 `LABHAUS_`）：
 
-| 环境变量 | 默认值 | 说明 |
-|---------|--------|------|
-| `LABHAUS_SERVER_PORT` | 8080 | 服务端口 |
-| `LABHAUS_SERVER_ENVIRONMENT` | development | 运行环境 |
-| `LABHAUS_DATABASE_HOST` | localhost | 数据库主机 |
-| `LABHAUS_DATABASE_PORT` | 5432 | 数据库端口 |
-| `LABHAUS_DATABASE_USER` | postgres | 数据库用户 |
-| `LABHAUS_DATABASE_PASSWORD` | postgres | 数据库密码 |
-| `LABHAUS_DATABASE_DBNAME` | labhaus | 数据库名称 |
-| `LABHAUS_LOG_LEVEL` | info | 日志级别（debug/info/warn/error） |
-| `LABHAUS_LOG_FORMAT` | json | 日志格式（json/console） |
+| 环境变量                          | 默认值         | 说明                                               |
+| --------------------------------- | -------------- | -------------------------------------------------- |
+| `LABHAUS_SERVER_PORT`             | 8080           | 服务端口                                           |
+| `LABHAUS_SERVER_ENVIRONMENT`      | development    | 运行环境                                           |
+| `LABHAUS_DATABASE_HOST`           | localhost      | 数据库主机                                         |
+| `LABHAUS_DATABASE_PORT`           | 5432           | 数据库端口                                         |
+| `LABHAUS_DATABASE_USER`           | postgres       | 数据库用户                                         |
+| `LABHAUS_DATABASE_PASSWORD`       | postgres       | 数据库密码                                         |
+| `LABHAUS_DATABASE_DBNAME`         | labhaus        | 数据库名称                                         |
+| `LABHAUS_MINIO_ENDPOINT`          | localhost:9000 | MinIO/S3 端点                                      |
+| `LABHAUS_MINIO_ACCESS_KEY`        | minioadmin     | MinIO/S3 Access Key                                |
+| `LABHAUS_MINIO_SECRET_KEY`        | minioadmin     | MinIO/S3 Secret Key                                |
+| `LABHAUS_IMAGE_PROVIDER_BASE_URL` | 必填           | 图像 Provider 基础 URL，需实现 `POST /v1/generate` |
+| `LABHAUS_IMAGE_PROVIDER_API_KEY`  | 必填           | 图像 Provider API Key                              |
+| `LABHAUS_LOG_LEVEL`               | info           | 日志级别（debug/info/warn/error）                  |
+| `LABHAUS_LOG_FORMAT`              | json           | 日志格式（json/console）                           |
+
+`LABHAUS_IMAGE_PROVIDER_BASE_URL` 和 `LABHAUS_IMAGE_PROVIDER_API_KEY` 不再有代码默认值；缺失时服务会在启动阶段失败，避免误连到示例地址。
 
 ## API 端点
 
@@ -101,6 +109,7 @@ GET /api/health
 ```
 
 **响应：**
+
 ```json
 {
   "status": "healthy",
@@ -111,16 +120,19 @@ GET /api/health
 ### Styles
 
 **列出所有 styles：**
+
 ```bash
 GET /api/styles?category=video&limit=20&offset=0
 ```
 
 **获取单个 style：**
+
 ```bash
 GET /api/styles/:id
 ```
 
 **创建 style：**
+
 ```bash
 POST /api/styles
 Content-Type: application/json
@@ -206,6 +218,7 @@ log.Debug("debug info", "data", data)
 ## 故障排查
 
 **数据库连接失败：**
+
 ```bash
 # 检查 PostgreSQL 是否运行
 docker compose ps postgres
@@ -215,6 +228,7 @@ docker compose logs postgres
 ```
 
 **端口被占用：**
+
 ```bash
 # 检查端口占用
 lsof -i :8080
