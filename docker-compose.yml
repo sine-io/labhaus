@@ -47,6 +47,23 @@ services:
       timeout: 20s
       retries: 3
 
+  mock-image-provider:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.mock-image-provider
+    container_name: labhaus-mock-image-provider
+    environment:
+      MOCK_IMAGE_PROVIDER_ADDR: ":8089"
+      MOCK_IMAGE_PROVIDER_API_KEY: ${LABHAUS_IMAGE_PROVIDER_API_KEY:-dev-mock-key}
+      MOCK_IMAGE_PROVIDER_PUBLIC_BASE_URL: ${MOCK_IMAGE_PROVIDER_PUBLIC_BASE_URL:-http://mock-image-provider:8089}
+    ports:
+      - "8089:8089"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8089/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   api:
     build:
       context: ./backend
@@ -67,8 +84,8 @@ services:
       LABHAUS_MINIO_ACCESS_KEY: minioadmin
       LABHAUS_MINIO_SECRET_KEY: minioadmin
       LABHAUS_MINIO_USE_SSL: "false"
-      LABHAUS_IMAGE_PROVIDER_BASE_URL: ${LABHAUS_IMAGE_PROVIDER_BASE_URL:?Set LABHAUS_IMAGE_PROVIDER_BASE_URL to a real or mock image provider}
-      LABHAUS_IMAGE_PROVIDER_API_KEY: ${LABHAUS_IMAGE_PROVIDER_API_KEY:?Set LABHAUS_IMAGE_PROVIDER_API_KEY}
+      LABHAUS_IMAGE_PROVIDER_BASE_URL: ${LABHAUS_IMAGE_PROVIDER_BASE_URL:-http://mock-image-provider:8089}
+      LABHAUS_IMAGE_PROVIDER_API_KEY: ${LABHAUS_IMAGE_PROVIDER_API_KEY:-dev-mock-key}
       LABHAUS_LOG_LEVEL: "debug"
       LABHAUS_LOG_FORMAT: "console"
       LABHAUS_JWT_SECRET_KEY: "dev-secret-key-change-in-production"
@@ -81,6 +98,8 @@ services:
       redis:
         condition: service_healthy
       minio:
+        condition: service_healthy
+      mock-image-provider:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/api/health"]

@@ -21,27 +21,38 @@ cd labhaus
 cp backend/.env.example backend/.env
 ```
 
-编辑 `backend/.env`，配置必要的环境变量：
+编辑 `backend/.env`，配置裸跑 Go API 时需要的环境变量：
 
 ```bash
 # Go API 配置
 LABHAUS_SERVER_PORT=8080
 LABHAUS_JWT_SECRET_KEY=your-secret-key-change-in-production
 
-# 图像 Provider（必须显式配置）
+# 图像 Provider（裸跑 Go API 时必须显式配置）
 LABHAUS_IMAGE_PROVIDER_BASE_URL=http://localhost:8089
-LABHAUS_IMAGE_PROVIDER_API_KEY=replace-with-provider-api-key
+LABHAUS_IMAGE_PROVIDER_API_KEY=dev-mock-key
 ```
 
-Docker Compose 也会读取 `LABHAUS_IMAGE_PROVIDER_BASE_URL` 和 `LABHAUS_IMAGE_PROVIDER_API_KEY`。启动前请在 shell 中导出，或放入 Compose 可读取的 `.env` 文件。
+Docker Compose 默认会启动本地 `mock-image-provider`，并自动为 API 注入：
+
+- `LABHAUS_IMAGE_PROVIDER_BASE_URL=http://mock-image-provider:8089`
+- `LABHAUS_IMAGE_PROVIDER_API_KEY=dev-mock-key`
+
+如果要在 Compose 中改用真实图像 Provider，再通过 shell 或 Compose 可读取的 `.env` 覆盖 `LABHAUS_IMAGE_PROVIDER_BASE_URL` 和 `LABHAUS_IMAGE_PROVIDER_API_KEY`。
 
 ## 3. 启动服务
 
 ### 方式 A: Docker Compose（推荐）
 
 ```bash
-# 启动所有服务
-docker compose up -d
+# 先启动 API 依赖服务和本地 mock image provider
+docker compose up -d postgres redis minio mock-image-provider
+
+# 导入可重复执行的样式种子数据
+docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
+
+# 启动 API
+docker compose up -d api
 
 # 查看日志
 docker compose logs -f api
@@ -57,6 +68,16 @@ docker compose down
 - PostgreSQL: localhost:5432
 - Redis: localhost:6379
 - MinIO: http://localhost:9001
+- Mock Image Provider: http://localhost:8089
+
+如果要在已启动全部服务后补导入样式数据，请在导入后重启 API：
+
+```bash
+docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
+docker compose restart api
+```
+
+原因：当前 API 会在启动时加载样式快照用于推荐。
 
 ### 方式 B: 本地开发模式
 
@@ -64,8 +85,11 @@ docker compose down
 # 安装依赖
 pnpm install
 
-# 启动基础设施
-docker compose up -d postgres redis minio
+# 启动基础设施和本地 mock image provider
+docker compose up -d postgres redis minio mock-image-provider
+
+# 导入样式种子数据
+docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
 
 # 启动 Go API
 cd backend
@@ -92,6 +116,16 @@ curl http://localhost:8080/api/health
   "version": "0.1.0"
 }
 ```
+
+### 一键 MVP Smoke
+
+完成样式 seed 并启动 API 后，可以运行：
+
+```bash
+scripts/mvp-smoke.sh
+```
+
+脚本会检查健康状态、注册/登录演示用户、请求样式推荐，并通过本地 mock image provider 执行批量生图。
 
 ### 注册并登录
 
@@ -185,7 +219,12 @@ docker compose logs postgres
 
 ### Q: 样式库数据为空
 
-**A**: 当前 Go 主线需要补齐样式数据导入流程。`apps/api/src/scripts/import-styles.ts` 仅作为 legacy 参考，不再作为主线启动步骤。
+**A**: 导入种子数据后重启 API，让启动时的推荐器重新加载样式快照：
+
+```bash
+docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
+docker compose restart api
+```
 
 ### Q: pnpm 安装依赖慢
 

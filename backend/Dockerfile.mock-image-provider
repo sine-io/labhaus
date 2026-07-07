@@ -1,0 +1,28 @@
+# Build stage
+FROM golang:1.23-alpine AS builder
+
+ENV GOTOOLCHAIN=auto
+
+WORKDIR /app
+
+RUN apk add --no-cache git
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o mock-image-provider ./cmd/mock-image-provider
+
+# Final stage
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates wget
+
+WORKDIR /root/
+
+COPY --from=builder /app/mock-image-provider .
+
+EXPOSE 8089
+
+CMD ["./mock-image-provider"]
