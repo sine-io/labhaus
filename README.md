@@ -26,7 +26,8 @@ _Experiment. Automate. Scale._
 
 - **后端**：`backend/` Go API（Gin + PostgreSQL + Redis + MinIO）
 - **前端**：`apps/web/` Next.js App Router
-- **参考/遗留**：`apps/api/`、`packages/workflow/`、`packages/types/`、`frontend/`
+
+早期 TypeScript API 和共享包遗留代码已删除；如需参考旧实现，请从 git history 查看。`frontend/` 若在本地存在，仅是未跟踪的旧草稿目录，不属于当前 workspace。
 
 近期 MVP 先交付两个可验证能力：
 
@@ -145,7 +146,6 @@ labhaus/
 │   └── migrations/      # 数据库迁移
 ├── apps/
 │   └── web/             # Next.js 前端（当前主线）
-├── packages/            # TypeScript 参考包 / legacy
 └── docs/                # 完整文档
 ```
 

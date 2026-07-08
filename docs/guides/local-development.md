@@ -1,6 +1,6 @@
 # 开发指南
 
-> **当前状态**：本文包含早期 TypeScript API 工作流，现作为 legacy/reference 保留。当前主线是 Go 后端 `backend/` + Next 前端 `apps/web/`；新开发请优先参考 `docs/guides/quick-start.md`。
+当前主线是 Go 后端 `backend/` + Next 前端 `apps/web/`。早期 TypeScript API 和共享包遗留代码已删除，如需参考旧实现请从 git history 查看。
 
 ## 环境要求
 
@@ -34,17 +34,22 @@ docker compose up -d
 docker compose ps
 
 # 复制环境变量
-cp .env.example .env.local
+cp backend/.env.example backend/.env
+cp apps/web/.env.example apps/web/.env.local
 ```
 
 ### 4. 开发模式
 
 ```bash
-# 启动所有应用的开发服务器
+# 启动当前 Node workspace 的开发服务器
 pnpm dev
 
-# 或单独启动某个应用
-pnpm --filter @labhaus/api dev
+# 单独启动前端
+pnpm --filter @labhaus/web dev
+
+# 单独启动 Go API
+cd backend
+go run cmd/api/main.go
 ```
 
 ## 项目结构
@@ -52,12 +57,8 @@ pnpm --filter @labhaus/api dev
 ```
 labhaus/
 ├── apps/                    # 应用
-│   ├── api/                 # 后端 API 服务
-│   └── web/                 # 前端 Web 应用
-├── packages/                # 共享包
-│   ├── types/               # TypeScript 类型定义
-│   ├── config/              # 共享配置
-│   └── utils/               # 工具函数
+│   └── web/                 # Next.js 前端
+├── backend/                 # Go API 服务
 ├── docs/                    # 文档
 ├── .github/                 # GitHub Actions
 ├── docker-compose.yml       # Docker 配置

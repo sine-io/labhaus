@@ -16,7 +16,7 @@
 ┌─────────────────────────────────────────────────────────────┐
 │                      API Gateway 层                          │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │  Hono + 中间件链                                      │   │
+│  │  Gin + 中间件链                                       │   │
 │  │  (日志、认证、CORS、限流、错误处理)                   │   │
 │  └──────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
@@ -169,25 +169,23 @@ CREATE TABLE refresh_tokens (
 
 ## 技术栈
 
-### 当前实现 (Phase 1)
+### 当前实现
 
-- **语言**: TypeScript
-- **后端框架**: Hono (轻量级高性能)
-- **数据库**: PostgreSQL 14+
-- **缓存**: Redis 7+ (规划中)
+- **后端语言**: Go
+- **后端框架**: Gin
+- **数据库**: PostgreSQL 16+
+- **缓存/队列**: Redis 7+
 - **对象存储**: MinIO / S3
 - **认证**: JWT + bcrypt
-- **类型验证**: Zod
-- **测试**: Vitest
+- **测试**: Go testing + testify、Node built-in test runner
+- **前端框架**: React 19 + Next.js 16 App Router
+- **前端样式**: TailwindCSS
 - **Monorepo**: Turborepo + pnpm
 
-### 规划中 (Phase 2-3)
+### 后续阶段
 
-- **前端框架**: React 18 + Next.js 14
-- **UI 库**: TailwindCSS + shadcn/ui
 - **可视化**: React Flow (工作流编辑器)
-- **状态管理**: Zustand
-- **图像生成**: OpenAI DALL-E / Stable Diffusion
+- **图像生成**: OpenAI / 自建 Provider / Stable Diffusion
 - **视频合成**: FFmpeg
 - **TTS**: Edge-TTS
 

@@ -1,5 +1,7 @@
 # Phase 1: 基础整合 - 完成总结
 
+> **历史说明**：本文记录 Phase 1 的早期 TypeScript 实现。对应的 `apps/api`、`packages/types`、`packages/workflow` 源码和包文档已在遗留清理中删除；如需查看旧实现，请从 git history 检出。
+
 ## ✅ 已完成任务
 
 ### 1. Monorepo 初始化 (#9)
@@ -115,10 +117,10 @@ GET    /api/auth/me            # Get current user
 
 ### 已完成文档
 - ✅ README.md - 项目概述
-- ✅ apps/api/README.md - API 服务文档
-- ✅ apps/api/docs/API_DESIGN.md - API 设计文档
-- ✅ apps/api/docs/AUTHENTICATION.md - 认证文档
-- ✅ packages/workflow/README.md - 工作流引擎文档
+- ✅ 早期 API 服务文档（已删除，可从 git history 查看）
+- ✅ 早期 API 设计文档（已删除，可从 git history 查看）
+- ✅ 早期认证文档（已删除，可从 git history 查看）
+- ✅ 早期工作流引擎文档（已删除，可从 git history 查看）
 - ✅ docs/guides/local-development.md - 本地开发指南
 - ✅ CONTRIBUTING.md - 贡献指南
 
@@ -129,30 +131,7 @@ GET    /api/auth/me            # Get current user
 
 ## 🚀 快速开始
 
-```bash
-# 克隆项目
-git clone https://github.com/sine-io/labhaus.git
-cd labhaus
-
-# 安装依赖
-pnpm install
-
-# 启动数据库
-docker compose up -d
-
-# 运行迁移
-cd apps/api && pnpm migrate
-
-# 导入样式数据
-pnpm import-styles
-
-# 启动 API 服务
-pnpm dev
-
-# 运行测试
-pnpm test
-pnpm test:e2e
-```
+早期 TypeScript API 的快速开始命令已随遗留代码删除。当前启动方式请参考 [快速开始指南](guides/quick-start.md)。
 
 ## 🎓 技术债务
 

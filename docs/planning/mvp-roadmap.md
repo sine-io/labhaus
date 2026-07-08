@@ -101,9 +101,10 @@
 
 **Day 1: 主线收敛**
 
-- [ ] 明确 `backend/` + `apps/web/` 为当前主线
-- [ ] 标记 `apps/api`、`packages/*`、`frontend/` 为 legacy/reference
-- [ ] 修正文档和启动说明
+- [x] 明确 `backend/` + `apps/web/` 为当前主线
+- [x] 删除已废弃的 `apps/api` 和 `packages/*` 遗留代码
+- [x] 保持本地 `frontend/` 草稿目录默认忽略，不纳入当前 workspace
+- [x] 修正文档和启动说明
 
 **Day 2-3: 认证和接口契约**
 

@@ -11,11 +11,7 @@ Labhaus 采用 **Go 后端 + TypeScript 前端**架构，基于现代化的技�
 - `backend/`：Go API 服务，负责认证、样式、工作流元数据、批量生图、MinIO 存储。
 - `apps/web/`：Next.js App Router 前端，负责样式推荐和批量生图页面。
 
-以下目录仅作为 legacy/reference 使用，除非单独恢复为主线：
-
-- `apps/api/`：早期 TypeScript Hono API。
-- `packages/workflow/`、`packages/types/`：早期 TypeScript 共享包。
-- `frontend/`：早期 Next.js 前端草稿，当前不在 pnpm workspace 中。
+早期 TypeScript API 和共享包遗留代码已删除；如需参考旧实现，请从 git history 查看。`frontend/` 若在本地存在，仅是未跟踪的旧草稿目录，不属于当前 pnpm workspace。
 
 ## 后端技术栈 (Go)
 
@@ -212,7 +208,7 @@ labhaus/
 │   └── go.mod
 ├── apps/
 │   └── web/                         # Next.js 前端（当前主线）
-├── frontend/                         # legacy 草稿，默认忽略
+├── frontend/                         # 本地忽略草稿（若存在，不属于 workspace）
 └── docs/                            # 文档
 ```
 
@@ -271,19 +267,18 @@ require (
 ✅ 长连接、实时通信  
 ✅ 微服务架构
 
-## 技术债务（TypeScript 遗留）
+## 已清理的 TypeScript 遗留
 
-### Legacy/reference
+### 已删除
 
-- ❌ apps/api (TypeScript Hono)
-- 📦 packages/workflow (TypeScript workflow reference)
-- 📦 packages/types (TypeScript type reference)
-- ❌ frontend (legacy Next.js draft)
+- `apps/api/`：早期 TypeScript Hono API。
+- `packages/workflow/`：早期 TypeScript workflow reference。
+- `packages/types/`：早期 TypeScript 共享类型。
 
-### 保留用途
+### 保留方式
 
-- 📦 仅作为 Phase 1 参考实现
-- 📦 前端开发时可复用类型定义
+- 旧实现仅通过 git history 保留。
+- 当前前端不再依赖 `@labhaus/types` 或 `@labhaus/workflow`。
 
 ## 迁移计划
 

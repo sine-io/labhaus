@@ -177,14 +177,14 @@ curl http://localhost:8080/api/users/me \
 ## 6. 运行测试
 
 ```bash
-cd packages/workflow
-
-# 工作流参考包测试
-pnpm test
+# 前端代理/契约测试
+pnpm --filter @labhaus/web test
 
 # 前端类型检查
-cd ../../apps/web
-pnpm typecheck
+pnpm --filter @labhaus/web typecheck
+
+# 全部当前 Node workspace 测试
+pnpm test
 ```
 
 ## 7. 下一步

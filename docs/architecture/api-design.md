@@ -1,6 +1,6 @@
 # Labhaus API 设计文档
 
-> **当前状态**：本文描述早期 TypeScript API（`apps/api`，`/api/auth/*`，端口 3001）契约，现作为 legacy/reference 保留。当前主线 Go 后端使用 `/api/users/*`、`/api/styles/*`、`/api/images/*`，端口 8080；以 `backend/README.md` 和运行时代码为准。
+> **当前状态**：本文描述早期 TypeScript API（`/api/auth/*`，端口 3001）契约，仅作为历史参考保留；对应源码已在遗留清理中删除。当前主线 Go 后端使用 `/api/users/*`、`/api/styles/*`、`/api/images/*`，端口 8080；以 `backend/README.md` 和运行时代码为准。
 
 ## API 基础
 
@@ -406,6 +406,5 @@ curl -X POST http://localhost:3001/api/auth/refresh \
 
 ## 更多文档
 
-- [认证详细文档](../../apps/api/docs/AUTHENTICATION.md)
-- [API 路由设计](../../apps/api/docs/API_DESIGN.md)
+- [当前 Go 后端文档](../../backend/README.md)
 - [部署指南](../DEPLOYMENT.md)
