@@ -1,332 +1,305 @@
 # Labhaus 系统设计
 
-## 系统架构
+**最后更新**：2026-07-08
 
-### 总体架构
+## 设计目标
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                         前端层                               │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │ 可视化编辑器 │  │  样式库UI    │  │  任务监控    │      │
-│  │ (React Flow) │  │  (Gallery)   │  │ (Dashboard)  │      │
-│  └──────────────┘  └──────────────┘  └──────────────┘      │
-└─────────────────────────────────────────────────────────────┘
-                            ↓ REST API
-┌─────────────────────────────────────────────────────────────┐
-│                      API Gateway 层                          │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │  Gin + 中间件链                                       │   │
-│  │  (日志、认证、CORS、限流、错误处理)                   │   │
-│  └──────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│                       业务服务层                             │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │  样式库服务  │  │  工作流引擎  │  │  认证服务    │      │
-│  │  (Styles)    │  │  (Workflow)  │  │  (Auth)      │      │
-│  └──────────────┘  └──────────────┘  └──────────────┘      │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │  推荐算法    │  │  图像生成    │  │  视频合成    │      │
-│  │  (TF-IDF)    │  │  (Providers) │  │  (FFmpeg)    │      │
-│  └──────────────┘  └──────────────┘  └──────────────┘      │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│                       数据存储层                             │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │  PostgreSQL  │  │    Redis     │  │    MinIO     │      │
-│  │  (主数据库)  │  │   (缓存)     │  │ (对象存储)   │      │
-│  └──────────────┘  └──────────────┘  └──────────────┘      │
-└─────────────────────────────────────────────────────────────┘
+Labhaus 的长期目标是 AI 视频内容工作流实验室。当前系统先实现图像素材 MVP：
+
+```text
+认证 -> 样式推荐 -> 批量生图 -> MinIO 下载链接
 ```
 
-## 核心模块
+这个 MVP 是后续视频工作流的基础。
 
-### 1. 样式库服务
+## 当前架构
 
-**功能**:
-- 样式查询、筛选、搜索
-- 基于 TF-IDF 的智能推荐
-- 全文搜索（PostgreSQL FTS）
-
-**技术**:
-- PostgreSQL + 全文搜索索引
-- natural (NLP 库)
-- 余弦相似度算法
-
-### 2. 工作流引擎
-
-**功能**:
-- 状态机管理（7 种状态）
-- 节点执行器
-- DAG 验证（循环检测）
-
-**设计**:
-```typescript
-WorkflowDefinition
-  ├── nodes[]          // 节点定义
-  ├── edges[]          // 边连接
-  └── version          // 版本号
-
-WorkflowExecution
-  ├── status           // 执行状态
-  ├── current_node     // 当前节点
-  ├── context          // 上下文数据
-  └── error            // 错误信息
+```text
+Browser
+  |
+  | HTTP
+  v
+apps/web (Next.js App Router)
+  |
+  | Route handlers forward Authorization
+  v
+Go API (Gin)
+  |
+  |-- PostgreSQL: users, styles, workflows
+  |-- Redis: queue skeleton
+  |-- MinIO: generated images and future media
+  |-- Image Provider: mock or real HTTP provider
 ```
 
-**状态转换**:
+## 模块
+
+### 1. Web 前端
+
+位置：`apps/web`
+
+职责：
+
+- 注册/登录页面。
+- 保存 Bearer Token。
+- 样式推荐页面。
+- 批量生图页面。
+- 用 Next.js route handlers 代理 Go API 请求。
+
+当前页面：
+
+- `/`
+- `/auth`
+- `/styles/recommend`
+- `/images/generate`
+
+### 2. API 层
+
+位置：`backend/internal/infrastructure/http`
+
+职责：
+
+- Gin 路由。
+- 请求日志和 recovery。
+- JWT 鉴权 middleware。
+- HTTP handlers。
+
+当前路由：
+
+- `/api/health`
+- `/api/users/*`
+- `/api/styles/*`
+- `/api/workflows/*`
+- `/api/images/*`
+
+### 3. 应用层
+
+位置：`backend/internal/application`
+
+职责：
+
+- CQRS command/query handlers。
+- DTO 转换。
+- 批量生图服务。
+
+批量生图服务通过 semaphore 限制并发，默认最大并发为 10。
+
+### 4. 领域层
+
+位置：`backend/internal/domain`
+
+当前聚合和模型：
+
+- `user`
+- `style`
+- `workflow`
+- `image/provider`
+
+状态机：
+
+```text
+DRAFT -> PENDING | CANCELLED
+PENDING -> RUNNING | CANCELLED
+RUNNING -> PAUSED | COMPLETED | FAILED
+PAUSED -> RUNNING | CANCELLED
+COMPLETED / FAILED / CANCELLED -> terminal
 ```
-DRAFT → PENDING → RUNNING → COMPLETED
-                     ↓
-                  PAUSED → RUNNING
-                     ↓
-                  FAILED → PENDING (retry)
+
+### 5. 推荐模块
+
+当前存在两套实现：
+
+1. HTTP 运行时：`handlers.StaticStyleRecommender`，使用关键词重叠打分。
+2. 领域模块：`internal/domain/style/recommendation`，已有 TF-IDF + Cosine 实现。
+
+后续应将 HTTP 运行时推荐器替换为领域层 TF-IDF + Cosine，并基于 500+ 样式库评估推荐质量。
+
+### 6. 图像 Provider
+
+位置：
+
+- `backend/internal/domain/image/provider`
+- `backend/internal/infrastructure/image/gptimage2`
+- `backend/cmd/mock-image-provider`
+
+Provider 合约：
+
+```http
+POST /v1/generate
+Authorization: Bearer <api-key>
+Content-Type: application/json
 ```
 
-### 3. 认证系统
+Go API 下载 Provider 返回的 `image_url`，再上传到 MinIO `images` bucket。
 
-**功能**:
-- JWT 认证
-- Refresh token 机制
-- bcrypt 密码加密
+### 7. 存储
 
-**流程**:
-```
-1. 注册/登录 → 获取 access_token + refresh_token
-2. 请求 API → Authorization: Bearer <token>
-3. Token 过期 → 用 refresh_token 获取新 token
-```
+位置：`backend/internal/infrastructure/storage`
 
-### 4. 图像生成服务（规划中）
+- `MinIOStorage`：通用 bucket/object 操作。
+- `MinIOImageStorage`：图片上传、下载、存在性检查、预签名 URL。
 
-**架构**:
-```typescript
-interface ImageProvider {
-  generate(prompt, options): Promise<ImageResult>
-  batchGenerate(prompts[], options): Promise<ImageResult[]>
-}
+API 启动时确保 buckets：
 
-// Provider 实现
-- MockProvider (测试)
-- OpenAIProvider (DALL-E)
-- StableDiffusionProvider (Stable Diffusion)
-```
+- `workflows`
+- `images`
+- `videos`
+- `temp`
+
+### 8. 队列
+
+位置：`backend/internal/infrastructure/queue`
+
+当前 Redis queue 支持：
+
+- enqueue/dequeue
+- worker loop
+- retry
+- dead letter queue
+- task status
+
+当前 worker 仅保留 workflow task handler 骨架；视频工作流执行逻辑待实现。
 
 ## 数据模型
 
-### 样式库 (styles)
+### styles
 
-```sql
-CREATE TABLE styles (
-  id UUID PRIMARY KEY,
-  case_id INTEGER UNIQUE,
-  title TEXT NOT NULL,
-  prompt TEXT NOT NULL,
-  category TEXT NOT NULL,
-  styles TEXT[],
-  scenes TEXT[],
-  image_url TEXT,
-  featured BOOLEAN,
-  created_at TIMESTAMP,
-  updated_at TIMESTAMP
-);
-
--- 索引
-CREATE INDEX idx_styles_category ON styles(category);
-CREATE INDEX idx_styles_featured ON styles(featured);
-CREATE INDEX idx_styles_title_search ON styles USING gin(to_tsvector('english', title));
+```text
+id           varchar(36) primary key
+name         varchar(100) not null
+description  varchar(500)
+prompt       text not null
+category     varchar(50)
+tags         text          # JSON array string
+created_at   timestamptz not null
+updated_at   timestamptz not null
+deleted_at   timestamptz
 ```
 
-### 用户 (users)
+### users
 
-```sql
-CREATE TABLE users (
-  id UUID PRIMARY KEY,
-  email TEXT UNIQUE NOT NULL,
-  password_hash TEXT,
-  name TEXT,
-  google_id TEXT UNIQUE,
-  email_verified BOOLEAN,
-  created_at TIMESTAMP,
-  updated_at TIMESTAMP
-);
+```text
+id            varchar(36) primary key
+email         varchar(255) not null unique
+password_hash varchar(255) not null
+name          varchar(100) not null
+role          varchar(20) not null default 'user'
+created_at    timestamptz not null
+updated_at    timestamptz not null
+deleted_at    timestamptz
 ```
 
-### 刷新令牌 (refresh_tokens)
+### workflows
 
-```sql
-CREATE TABLE refresh_tokens (
-  id UUID PRIMARY KEY,
-  user_id UUID REFERENCES users(id),
-  token TEXT UNIQUE NOT NULL,
-  expires_at TIMESTAMP NOT NULL,
-  created_at TIMESTAMP
-);
+```text
+id         varchar(36) primary key
+user_id    varchar(36) not null
+style_id   varchar(36) not null
+state      varchar(20) not null
+config     jsonb not null
+result     jsonb
+created_at timestamptz not null
+updated_at timestamptz not null
+deleted_at timestamptz
 ```
 
-## 技术栈
+## 当前 MVP 数据流
 
-### 当前实现
+### 登录
 
-- **后端语言**: Go
-- **后端框架**: Gin
-- **数据库**: PostgreSQL 16+
-- **缓存/队列**: Redis 7+
-- **对象存储**: MinIO / S3
-- **认证**: JWT + bcrypt
-- **测试**: Go testing + testify、Node built-in test runner
-- **前端框架**: React 19 + Next.js 16 App Router
-- **前端样式**: TailwindCSS
-- **Monorepo**: Turborepo + pnpm
-
-### 后续阶段
-
-- **可视化**: React Flow (工作流编辑器)
-- **图像生成**: OpenAI / 自建 Provider / Stable Diffusion
-- **视频合成**: FFmpeg
-- **TTS**: Edge-TTS
-
-## API 设计
-
-### RESTful 规范
-
-```
-GET    /api/resource         # 列表
-GET    /api/resource/:id     # 详情
-POST   /api/resource         # 创建
-PUT    /api/resource/:id     # 更新
-DELETE /api/resource/:id     # 删除
+```text
+Browser -> Next /api/users/login -> Go /api/users/login
+Go -> PostgreSQL users
+Go -> JWT token
+Next -> Browser
+Browser -> localStorage
 ```
 
-### 统一响应格式
+### 样式推荐
 
-**成功响应**:
-```json
-{
-  "data": { ... },
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 100
-  }
-}
+```text
+Browser -> Next /api/styles/recommend
+Next forwards Authorization
+Go AuthMiddleware validates JWT
+Go recommender scores loaded style snapshot
+Go returns recommendations
 ```
 
-**错误响应**:
-```json
-{
-  "error": "ERROR_CODE",
-  "message": "Human-readable message",
-  "details": { ... }
-}
+### 批量生图
+
+```text
+Browser -> Next /api/images/generate
+Next forwards Authorization
+Go AuthMiddleware validates JWT
+Go BatchImageService runs prompts concurrently
+Go -> Image Provider /v1/generate
+Go downloads provider image_url
+Go uploads bytes to MinIO images bucket
+Go returns presigned URLs
 ```
 
-## 安全设计
+## 配置边界
 
-### 1. 认证与授权
+关键环境变量：
 
-- JWT access token (1小时过期)
-- JWT refresh token (7天过期，数据库存储)
-- bcrypt 密码加密 (10 rounds)
+- `LABHAUS_DATABASE_*`
+- `LABHAUS_REDIS_*`
+- `LABHAUS_MINIO_*`
+- `LABHAUS_JWT_SECRET_KEY`
+- `LABHAUS_JWT_TOKEN_DURATION`
+- `LABHAUS_IMAGE_PROVIDER_BASE_URL`
+- `LABHAUS_IMAGE_PROVIDER_API_KEY`
 
-### 2. API 安全
+图像 Provider 配置缺失时 API 启动失败，避免误连示例地址。
 
-- CORS 配置
-- 速率限制 (100 req/min per IP)
-- 安全头 (X-Frame-Options, CSP 等)
-- 输入验证 (Zod schema)
+## 当前限制
 
-### 3. 数据安全
+- 只有本地 demo seed，尚未导入 500+ 样式库。
+- 样式推荐运行时未接入 TF-IDF + Cosine。
+- Workflow API 尚未执行真实工作流。
+- 图片 progress 接口当前固定返回 completed。
+- 没有 refresh token、OAuth、RBAC、限流、OpenAPI 自动生成。
+- Docker Compose 未包含 Web 前端服务。
 
-- 密码哈希存储
-- 敏感数据不记录日志
-- 生产环境错误信息脱敏
+## 后续架构演进
 
-## 性能优化
+### 视频工作流
 
-### 1. 数据库
-
-- 索引优化 (category, email, FTS)
-- 查询分页
-- 连接池管理
-
-### 2. 缓存策略（规划）
-
-- Redis 缓存热点数据
-- 样式库查询结果缓存
-- CDN 缓存静态资源
-
-### 3. 并发控制
-
-- 批量任务并发限制 (10 并发)
-- 任务队列管理
-- 失败重试机制
-
-## 可扩展性
-
-### 水平扩展
-
-```
-              Load Balancer
-                    ↓
-    ┌───────────────┼───────────────┐
-    ↓               ↓               ↓
-  API 1           API 2           API 3
-    ↓               ↓               ↓
-        PostgreSQL (Primary-Replica)
-              Redis Cluster
+```text
+Text/Article
+  -> Script generation
+  -> Storyboard
+  -> Style recommendation
+  -> Batch image generation
+  -> TTS
+  -> FFmpeg render
+  -> MP4 in MinIO
 ```
 
-### 模块化设计
+需要补充：
 
-- Provider 接口抽象
-- 插件化节点系统
-- 微服务架构预留
+- 任务持久化和执行日志。
+- Redis queue worker 接入真实执行器。
+- 中间产物存储。
+- 任务进度 API。
+- 任务监控 UI。
 
-## 监控与日志
+### 可视化工作流
 
-### 日志级别
+后续可引入：
 
-- INFO: 正常请求日志
-- WARN: 业务警告
-- ERROR: 错误和异常
+- React Flow。
+- 工作流 JSON schema。
+- 节点注册表。
+- DAG 校验。
+- 输入/处理/输出节点。
 
-### 监控指标（规划）
+### 生产化
 
-- API 响应时间
-- 错误率
-- 数据库连接池
-- 任务成功率
+后续需要：
 
-## 部署架构
-
-### Docker Compose (开发/小规模)
-
-```yaml
-services:
-  api:
-    image: labhaus-api
-    ports: ["3001:3001"]
-  postgres:
-    image: postgres:14
-  redis:
-    image: redis:7
-  minio:
-    image: minio/minio
-```
-
-### Kubernetes (生产/大规模)
-
-- API Deployment (多副本)
-- PostgreSQL StatefulSet
-- Redis Cluster
-- Ingress (负载均衡 + SSL)
-
-## 下一步规划
-
-1. **Phase 2**: 图像生成服务和批量任务管理
-2. **Phase 3**: 可视化工作流编辑器
-3. **Phase 4**: 模板市场和社区功能
+- OpenAPI 文档。
+- API 限流。
+- 审计日志。
+- 监控和告警。
+- 备份策略。
+- 多环境配置管理。

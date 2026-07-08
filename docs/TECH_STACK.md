@@ -1,318 +1,171 @@
-# Labhaus 技术栈文档
+# Labhaus 技术栈
 
-## 总览
-
-Labhaus 采用 **Go 后端 + TypeScript 前端**架构，基于现代化的技术栈构建。
+**最后更新**：2026-07-08
 
 ## 当前主线
 
-当前可执行主线是：
+- `backend/`：Go API 服务。
+- `apps/web/`：Next.js App Router 前端。
+- `docker-compose.yml`：本地 PostgreSQL、Redis、MinIO、mock image provider 和 Go API。
 
-- `backend/`：Go API 服务，负责认证、样式、工作流元数据、批量生图、MinIO 存储。
-- `apps/web/`：Next.js App Router 前端，负责样式推荐和批量生图页面。
+当前 MVP 是“认证后的样式推荐 + 批量生图”。视频生成、TTS、FFmpeg、可视化编辑器和模板市场属于后续阶段。
 
-早期 TypeScript API 和共享包遗留代码已删除；如需参考旧实现，请从 git history 查看。`frontend/` 若在本地存在，仅是未跟踪的旧草稿目录，不属于当前 pnpm workspace。
+## 后端
 
-## 后端技术栈 (Go)
+### 语言和框架
 
-### 核心框架
+- Go 1.25
+- Gin
+- GORM
+- Viper
+- Zerolog
+- testify
 
-- **语言**: Go 1.21+
-- **Web 框架**: Gin
-  - 为什么选择 Gin？
-    - 性能优秀 (40x faster than Martini)
-    - 中间件生态成熟
-    - 社区活跃 (Star 75k+)
-    - 文档完善
+### 数据和基础设施
 
-### 数据层
+- PostgreSQL 16
+- Redis 7
+- MinIO / S3
+- Docker / Docker Compose
 
-- **主数据库**: PostgreSQL 14+
-  - 全文搜索 (FTS)
-  - 数组类型支持
-  - 事务保证
-- **ORM**: GORM (常规 CRUD)
-- **SQL Builder**: sqlc (复杂查询，类型安全)
-- **缓存**: Redis 7+
-- **对象存储**: MinIO / Amazon S3
+### 认证
 
-### 认证与安全
+- `github.com/golang-jwt/jwt/v5`
+- JWT Bearer Token
+- bcrypt 密码哈希
 
-- **认证**: golang-jwt/jwt/v5
-  - Access token (1小时过期)
-  - Refresh token (7天过期)
-- **密码加密**: golang.org/x/crypto/bcrypt
-- **数据验证**: go-playground/validator/v10
-
-### 并发与任务
-
-- **任务队列**: Asynq (Redis-based)
-  - 持久化任务
-  - 失败重试
-  - 定时任务
-  - Dashboard 监控
-- **并发控制**: Goroutine + Channel
-
-### 配置与日志
-
-- **配置管理**: Viper
-  - 环境变量
-  - 配置文件
-  - 热重载
-- **日志**: zerolog
-  - 零分配，性能最佳
-  - 结构化日志
-  - 友好的 API
-
-### HTTP 客户端
-
-- **HTTP**: resty (类似 axios)
-
-### 测试
-
-- **测试框架**: testing (标准库)
-- **断言**: testify
-
-## 前端技术栈（当前主线）
-
-### 核心框架
-
-- **框架**: React 19
-- **路由**: Next.js 16 (App Router)
-  - 服务端渲染 (SSR)
-  - 静态生成 (SSG)
-  - API Routes
-
-### UI 库
-
-- **CSS 框架**: TailwindCSS 3+
-- **组件库**: shadcn/ui
-
-### 可视化（后续阶段）
-
-- **工作流编辑器**: React Flow（尚未进入当前 MVP）
-
-### 状态管理
-
-- **全局状态**: Zustand
-
-### 实时通信
-
-- **服务器推送**: Server-Sent Events (SSE)
-
-## AI / 媒体处理
+当前没有 refresh token、OAuth、RBAC、配额和限流。
 
 ### 图像生成
 
-- **显式配置的图像 Provider**：通过 `LABHAUS_IMAGE_PROVIDER_BASE_URL` 和 `LABHAUS_IMAGE_PROVIDER_API_KEY` 配置。
-- **OpenAI / 自建服务 / 本地 mock**：通过 Provider 适配层接入。
+后端通过 Provider 合约调用外部服务：
 
-### 文本生成（后续阶段）
-
-- **OpenAI GPT-4** (剧本生成)
-
-### 语音合成（后续阶段）
-
-- **Edge-TTS** (免费、高质量)
-
-### 视频处理（后续阶段）
-
-- **FFmpeg**
-  - 图片合成
-  - 音频混合
-  - 字幕渲染
-
-## 基础设施
-
-### 容器化
-
-- **Docker**
-- **Docker Compose** (开发环境)
-- **Kubernetes** (生产环境规划)
-
-### CI/CD
-
-- **GitHub Actions**
-  - 自动测试
-  - 代码检查
-  - 自动部署 (规划中)
-
-### 监控与日志（规划中）
-
-- **APM**: Prometheus + Grafana
-- **错误追踪**: Sentry
-
-## 完整技术栈图
-
+```http
+POST /v1/generate
+Authorization: Bearer <api-key>
 ```
-┌─────────────────────────────────────────────┐
-│              前端层（当前主线）              │
-│  apps/web: React 19 + Next.js 16 + Tailwind │
-│  样式推荐 + 批量生图                         │
-└─────────────────────────────────────────────┘
-                     ↓ REST API
-┌─────────────────────────────────────────────┐
-│              API Gateway (Go)                │
-│  Gin + 中间件 (日志/认证/CORS/限流)         │
-└─────────────────────────────────────────────┘
-                     ↓
-┌─────────────────────────────────────────────┐
-│            业务服务层 (Go)                   │
-│  GORM + sqlc + validator + JWT              │
-└─────────────────────────────────────────────┘
-                     ↓
-┌─────────────────────────────────────────────┐
-│           任务队列 (Asynq)                   │
-│  批量任务 + 失败重试 + 定时任务              │
-└─────────────────────────────────────────────┘
-                     ↓
-┌─────────────────────────────────────────────┐
-│              图像 Provider                   │
-│  Configured HTTP image provider             │
-└─────────────────────────────────────────────┘
-                     ↓
-┌─────────────────────────────────────────────┐
-│              数据存储层                      │
-│  PostgreSQL + Redis + MinIO/S3              │
-└─────────────────────────────────────────────┘
+
+本地 demo 使用 `backend/cmd/mock-image-provider`。
+
+### 队列
+
+当前实现为 Redis list/hash 轻量队列：
+
+- pending / processing / completed / dead 状态
+- retry count
+- dead letter queue
+
+当前 workflow worker 只保留执行骨架；完整视频工作流执行待接入。
+
+## 前端
+
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- lucide-react
+- Node built-in test runner
+
+当前没有 shadcn/ui、Zustand、React Flow 或 SSE；这些可以在后续视频和可视化阶段引入。
+
+## 当前运行架构
+
+```text
+Browser
+  |
+  v
+apps/web (Next.js)
+  |  route handlers forward Authorization
+  v
+backend Go API (Gin)
+  |-- PostgreSQL: users/styles/workflows
+  |-- Redis: queue skeleton
+  |-- MinIO: generated images and future media assets
+  |-- Image Provider: mock or real HTTP provider
 ```
 
 ## 项目结构
 
-```
+```text
 labhaus/
-├── backend/                          # Go 后端（DDD + Clean Arch）
-│   ├── cmd/
-│   │   └── api/
-│   │       └── main.go              # 应用入口
-│   ├── internal/
-│   │   ├── domain/                  # 领域层（核心）
-│   │   │   ├── style/
-│   │   │   ├── user/
-│   │   │   └── workflow/
-│   │   ├── application/             # 应用层（用例）
-│   │   │   ├── command/            # CQRS - 命令（写）
-│   │   │   ├── query/              # CQRS - 查询（读）
-│   │   │   └── dto/
-│   │   ├── infrastructure/          # 基础设施层
-│   │   │   ├── persistence/        # 数据持久化
-│   │   │   ├── http/               # HTTP 适配器
-│   │   │   ├── queue/              # 任务队列
-│   │   │   └── external/           # 外部服务
-│   │   └── pkg/                     # 共享工具包
-│   ├── migrations/                  # 数据库迁移
-│   ├── tests/                       # 测试（TDD）
-│   │   ├── unit/
-│   │   ├── integration/
-│   │   └── e2e/
-│   └── go.mod
 ├── apps/
-│   └── web/                         # Next.js 前端（当前主线）
-├── frontend/                         # 本地忽略草稿（若存在，不属于 workspace）
-└── docs/                            # 文档
+│   └── web/
+├── backend/
+│   ├── cmd/
+│   │   ├── api/
+│   │   └── mock-image-provider/
+│   ├── internal/
+│   │   ├── application/
+│   │   ├── domain/
+│   │   └── infrastructure/
+│   ├── seeds/
+│   └── tests/
+├── docs/
+├── scripts/
+├── docker-compose.yml
+├── package.json
+├── pnpm-workspace.yaml
+└── turbo.json
 ```
 
-## Go 依赖 (go.mod)
+## Go 依赖摘要
 
-```go
-module github.com/sine-io/labhaus
+实际版本以 `backend/go.mod` 为准。核心直接依赖包括：
 
-go 1.21
+- `github.com/gin-gonic/gin`
+- `github.com/golang-jwt/jwt/v5`
+- `github.com/google/uuid`
+- `github.com/redis/go-redis/v9`
+- `github.com/rs/zerolog`
+- `github.com/spf13/viper`
+- `github.com/stretchr/testify`
+- `golang.org/x/crypto`
+- `gorm.io/driver/postgres`
+- `gorm.io/gorm`
 
-require (
-    github.com/gin-gonic/gin v1.10.0           // Web 框架
-    gorm.io/gorm v1.25.5                       // ORM
-    gorm.io/driver/postgres v1.5.4             // PostgreSQL 驱动
-    github.com/google/uuid v1.5.0              // UUID
-    github.com/golang-jwt/jwt/v5 v5.2.0        // JWT
-    golang.org/x/crypto v0.17.0                // bcrypt
-    github.com/go-playground/validator/v10     // 验证
-    github.com/spf13/viper v1.18.2             // 配置
-    github.com/redis/go-redis/v9 v9.4.0        // Redis
-    github.com/hibiken/asynq v0.24.1           // 任务队列
-    github.com/minio/minio-go/v7 v7.0.66       // 对象存储
-    github.com/rs/zerolog v1.31.0              // 日志
-    github.com/go-resty/resty/v2 v2.11.0       // HTTP 客户端
-    github.com/stretchr/testify v1.8.4         // 测试
-)
-```
+## Node 依赖摘要
 
-## 为什么选择 Go？
+实际版本以 `package.json`、`apps/web/package.json` 和 `pnpm-lock.yaml` 为准。
 
-### 性能优势
+根 workspace：
 
-✅ **并发性能**: Goroutine 比 Node.js async/await 高效 10x  
-✅ **内存占用**: 约 Node.js 的 1/3  
-✅ **API 吞吐量**: 2-3x TypeScript  
-✅ **启动时间**: < 1s (vs Node.js 2-3s)
+- TypeScript
+- ESLint
+- Prettier
+- Turbo
 
-### 工程优势
+`apps/web`：
 
-✅ **类型安全**: 编译时错误检测  
-✅ **并发模型**: Goroutine + Channel 天然支持  
-✅ **部署简单**: 单一二进制文件  
-✅ **生态成熟**: 云原生工具首选语言
+- Next.js
+- React / React DOM
+- Tailwind CSS
+- lucide-react
 
-### 架构优势
+## 后续技术方向
 
-✅ **DDD Lite**: 轻量级领域驱动设计  
-✅ **CQRS**: 命令查询职责分离  
-✅ **Clean Architecture**: 整洁架构，依赖倒置  
-✅ **TDD**: 测试驱动开发
+### 视频工作流
 
-### 适合场景
+- LLM 剧本和分镜生成
+- TTS 配音
+- FFmpeg 合成
+- 任务监控和中间产物预览
+- 更完整的 Redis queue worker
 
-✅ 批量任务处理（图像生成、视频合成）  
-✅ 高并发 API 服务  
-✅ 长连接、实时通信  
-✅ 微服务架构
+### 推荐算法
 
-## 已清理的 TypeScript 遗留
+当前 HTTP 运行时使用关键词重叠打分；后续应接入 `internal/domain/style/recommendation` 中已有的 TF-IDF + Cosine 实现，并结合 500+ 样式库数据评估推荐质量。
 
-### 已删除
+### 可视化编辑器
 
-- `apps/api/`：早期 TypeScript Hono API。
-- `packages/workflow/`：早期 TypeScript workflow reference。
-- `packages/types/`：早期 TypeScript 共享类型。
+- React Flow
+- 工作流 JSON schema
+- 节点注册表
+- 输入、LLM、生图、TTS、视频合成、输出节点
 
-### 保留方式
+## 参考文档
 
-- 旧实现仅通过 git history 保留。
-- 当前前端不再依赖 `@labhaus/types` 或 `@labhaus/workflow`。
-
-## 迁移计划
-
-### Phase 1: Go 基础框架 (Week 1)
-
-- ✅ 项目结构
-- ✅ Gin + 中间件
-- ✅ PostgreSQL + GORM
-- ✅ 配置 + 日志
-
-### Phase 2: 核心功能迁移 (Week 2)
-
-- ✅ 认证系统
-- ✅ 样式库 API
-- ✅ 推荐算法
-- ✅ 测试覆盖
-
-### Phase 3: 高级功能 (Week 3)
-
-- ✅ Redis 缓存
-- ✅ Asynq 任务队列
-- ✅ MinIO 集成
-- ✅ E2E 测试
-
-### Phase 4: 部署与文档 (Week 4)
-
-- ✅ Docker 配置
-- ✅ 性能测试
-- ✅ 文档更新
-- ✅ 上线准备
-
-## 更多文档
-
-- [系统设计](./architecture/system-design.md)
-- [API 设计](./architecture/api-design.md)
-- [部署指南](./DEPLOYMENT.md)
-- [Go 迁移指南](./GO_MIGRATION.md) (待创建)
+- `docs/architecture/system-design.md`
+- `docs/architecture/api-design.md`
+- `docs/architecture/GO_DDD_ARCHITECTURE.md`
+- `docs/guides/quick-start.md`
+- `docs/DEPLOYMENT.md`

@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Labhaus Web
 
-## Getting Started
+`apps/web` 是当前 Labhaus 前端主线，基于 Next.js App Router 实现 MVP 页面：
 
-First, run the development server:
+- `/`：MVP 入口页
+- `/auth`：注册、登录、保存/清除 Bearer Token
+- `/styles/recommend`：认证后的样式推荐
+- `/images/generate`：认证后的批量生图
+
+前端通过 App Router route handlers 代理请求到 Go API，并转发浏览器侧保存的 `Authorization` header。
+
+## 环境变量
+
+复制模板：
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp apps/web/.env.example apps/web/.env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+当前使用的变量：
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+BACKEND_URL=http://localhost:8080
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`BACKEND_URL` 是 Go API 地址。浏览器请求仍访问 Next.js 的相对路径，例如 `/api/users/login`，由 Next.js 服务端代理到 `BACKEND_URL`。
 
-## Learn More
+## 开发
 
-To learn more about Next.js, take a look at the following resources:
+从仓库根目录运行：
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+pnpm install
+pnpm --filter @labhaus/web dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+访问 http://localhost:3000。
 
-## Deploy on Vercel
+## 测试和检查
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+# 前端代理契约和 token helper 测试
+pnpm --filter @labhaus/web test
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# TypeScript 类型检查
+pnpm --filter @labhaus/web typecheck
+
+# ESLint
+pnpm --filter @labhaus/web lint
+
+# 生产构建
+pnpm --filter @labhaus/web build
+```
+
+## API 代理契约
+
+代理 helper 位于 `app/api/_lib/backend-contract.mjs`：
+
+- `buildBackendHeaders()`：向 Go API 转发 `Content-Type` 和可选 `Authorization`。
+- `normalizeGenerateImageResponse()`：把 Go 后端的 `results` 同步暴露为前端兼容的 `images`。
+- `normalizeRecommendStyleRequest()`：把旧字段 `prompt`/`top_k` 兼容转换为 Go 后端当前使用的 `query`/`limit`。
+
+Bearer Token helper 位于 `app/lib/auth-token.mjs`，浏览器使用 `localStorage` 键 `labhaus_bearer_token` 保存 token。

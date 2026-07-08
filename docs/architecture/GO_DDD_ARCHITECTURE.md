@@ -1,590 +1,240 @@
-# Go 后端架构设计文档
+# Go 后端架构
 
-## 架构理念
+**最后更新**：2026-07-08
 
-Labhaus Go 后端采用 **DDD Lite + CQRS + Clean Architecture + DIP + TDD** 的混合架构模式。
+## 架构原则
 
-### 核心原则
+Labhaus Go 后端采用轻量级：
 
-1. **DDD Lite** (领域驱动设计-轻量版)
-   - 聚焦核心领域模型
-   - 避免过度工程化
-   - 保持 Go 的简洁性
+- DDD Lite
+- CQRS
+- Clean Architecture
+- 依赖倒置
 
-2. **CQRS** (命令查询职责分离)
-   - 读写分离
-   - 查询优化（缓存、只读副本）
-   - 命令验证和事件溯源
+目标是保持业务边界清晰，同时避免过度抽象。
 
-3. **Clean Architecture** (整洁架构)
-   - 依赖倒置：内层不依赖外层
-   - 业务逻辑独立于框架
-   - 可测试性优先
+## 当前目录结构
 
-4. **DIP** (依赖倒置原则)
-   - 高层模块不依赖低层模块
-   - 都依赖于抽象（接口）
-   - 接口由消费者定义
-
-5. **TDD** (测试驱动开发)
-   - 先写测试，后写实现
-   - Red-Green-Refactor 循环
-   - 保持高测试覆盖率
-
-## 项目结构
-
-```
+```text
 backend/
 ├── cmd/
-│   └── api/
-│       └── main.go                    # 应用入口
+│   ├── api/                         # API 入口和依赖注入
+│   └── mock-image-provider/         # 本地 demo Provider
 ├── internal/
-│   ├── domain/                        # 领域层 (最内层)
+│   ├── domain/                      # 领域层
+│   │   ├── image/provider/
 │   │   ├── style/
-│   │   │   ├── style.go              # 领域实体
-│   │   │   ├── repository.go         # 仓储接口（由领域定义）
-│   │   │   └── service.go            # 领域服务
 │   │   ├── user/
-│   │   │   ├── user.go
-│   │   │   ├── repository.go
-│   │   │   └── auth_service.go
 │   │   └── workflow/
-│   │       ├── workflow.go
-│   │       └── executor.go
-│   ├── application/                   # 应用层
-│   │   ├── command/                  # CQRS - 命令
-│   │   │   ├── register_user.go
-│   │   │   ├── create_style.go
-│   │   │   └── handler.go
-│   │   ├── query/                    # CQRS - 查询
-│   │   │   ├── get_styles.go
-│   │   │   ├── recommend_styles.go
-│   │   │   └── handler.go
-│   │   └── dto/                      # 数据传输对象
-│   │       ├── style_dto.go
-│   │       └── user_dto.go
-│   ├── infrastructure/                # 基础设施层 (最外层)
-│   │   ├── persistence/              # 数据持久化
-│   │   │   ├── postgres/
-│   │   │   │   ├── style_repository.go    # 实现 domain.StyleRepository
-│   │   │   │   ├── user_repository.go
-│   │   │   │   └── gorm.go
-│   │   │   └── redis/
-│   │   │       └── cache.go
-│   │   ├── http/                     # HTTP 适配器
-│   │   │   ├── server.go
-│   │   │   ├── middleware/
-│   │   │   │   ├── auth.go
-│   │   │   │   ├── logging.go
-│   │   │   │   └── recovery.go
-│   │   │   └── handlers/
-│   │   │       ├── style_handler.go
-│   │   │       ├── auth_handler.go
-│   │   │       └── health_handler.go
-│   │   ├── queue/                    # 任务队列
-│   │   │   └── asynq.go
-│   │   └── external/                 # 外部服务
-│   │       ├── openai/
-│   │       └── minio/
-│   └── pkg/                          # 共享工具包
-│       ├── errors/
-│       │   └── errors.go
-│       ├── validator/
-│       │   └── validator.go
-│       ├── jwt/
-│       │   └── jwt.go
-│       └── logger/
-│           └── logger.go
-├── migrations/                        # 数据库迁移
-│   ├── 001_create_users.sql
-│   └── 002_create_styles.sql
-├── tests/                            # 测试
-│   ├── unit/                         # 单元测试
-│   ├── integration/                  # 集成测试
-│   └── e2e/                          # 端到端测试
+│   ├── application/                 # 应用层
+│   │   ├── command/
+│   │   ├── dto/
+│   │   ├── query/
+│   │   └── service/image/
+│   └── infrastructure/              # 基础设施层
+│       ├── auth/
+│       ├── config/
+│       ├── http/
+│       ├── image/
+│       ├── logger/
+│       ├── persistence/
+│       ├── queue/
+│       └── storage/
+├── seeds/
+├── tests/
 ├── Dockerfile
-├── docker-compose.yml
-├── go.mod
-└── go.sum
+└── go.mod
 ```
 
-## 分层详解
+## 分层说明
 
-### 1. Domain Layer (领域层) - 核心
+### Domain
 
-**职责**：业务规则和领域逻辑
+领域层只表达业务模型、规则和接口，不依赖 Gin、GORM、Redis、MinIO。
 
-**原则**：
-- 不依赖任何外层
-- 只包含纯业务逻辑
-- 定义接口，不实现基础设施
+当前领域：
 
-**示例**：
-```go
-// internal/domain/style/style.go
-package style
+- `user.Entity`
+  - email/name/role/password hash
+  - role: `user` / `admin`
+- `style.Entity`
+  - name/description/prompt/category/tags
+  - 字段长度校验
+- `workflow.Entity`
+  - state machine
+  - config/result
+- `image/provider`
+  - `ImageProvider` 接口
+  - `ImageOptions`
+  - `ImageResult`
+  - Provider registry
 
-type Style struct {
-    ID       string
-    Title    string
-    Prompt   string
-    Category string
-    Featured bool
-}
+### Application
 
-// 领域方法
-func (s *Style) MarkAsFeatured() {
-    s.Featured = true
-}
+应用层编排领域对象和 repository 接口。
 
-func (s *Style) Validate() error {
-    if s.Title == "" {
-        return errors.New("title is required")
-    }
-    return nil
-}
+当前 CQRS handlers：
 
-// internal/domain/style/repository.go
-// 接口由领域层定义（DIP）
-package style
+- `command.UserCommandHandler`
+- `query.UserQueryHandler`
+- `command.StyleCommandHandler`
+- `query.StyleQueryHandler`
+- `command.WorkflowCommandHandler`
+- `query.WorkflowQueryHandler`
 
-type Repository interface {
-    Save(ctx context.Context, style *Style) error
-    FindByID(ctx context.Context, id string) (*Style, error)
-    FindAll(ctx context.Context, filter Filter) ([]*Style, error)
-}
+当前 service：
+
+- `service/image.BatchImageService`
+  - 单图生成
+  - 批量生成
+  - semaphore 并发控制
+  - progress channel 支持
+  - 部分失败聚合为 `BatchError`
+
+### Infrastructure
+
+基础设施层实现外部细节：
+
+- Gin router、middleware、handlers。
+- GORM repositories。
+- JWT service。
+- bcrypt hasher。
+- Redis queue。
+- MinIO storage。
+- GPT image HTTP Provider。
+- Mock image provider。
+
+## 依赖方向
+
+```text
+infrastructure -> application -> domain
 ```
 
-### 2. Application Layer (应用层) - 用例
+示例：
 
-**职责**：协调领域对象完成用例
-
-**原则**：
-- 不包含业务规则
-- 编排领域对象
-- CQRS 分离
-
-**Command 示例** (写操作)：
-```go
-// internal/application/command/register_user.go
-package command
-
-type RegisterUserCommand struct {
-    Email    string
-    Password string
-    Name     string
-}
-
-type RegisterUserHandler struct {
-    userRepo user.Repository
-}
-
-func (h *RegisterUserHandler) Handle(ctx context.Context, cmd RegisterUserCommand) error {
-    // 1. 验证
-    if err := validate(cmd); err != nil {
-        return err
-    }
-    
-    // 2. 创建领域对象
-    user := user.NewUser(cmd.Email, cmd.Password, cmd.Name)
-    
-    // 3. 持久化
-    return h.userRepo.Save(ctx, user)
-}
-```
-
-**Query 示例** (读操作)：
-```go
-// internal/application/query/get_styles.go
-package query
-
-type GetStylesQuery struct {
-    Category string
-    Page     int
-    Limit    int
-}
-
-type GetStylesHandler struct {
-    styleRepo style.Repository
-    cache     Cache
-}
-
-func (h *GetStylesHandler) Handle(ctx context.Context, q GetStylesQuery) ([]*dto.StyleDTO, error) {
-    // 查询可以直接访问缓存、读副本等优化
-    styles, err := h.styleRepo.FindAll(ctx, style.Filter{
-        Category: q.Category,
-        Page:     q.Page,
-        Limit:    q.Limit,
-    })
-    
-    return toDTO(styles), nil
-}
-```
-
-### 3. Infrastructure Layer (基础设施层) - 实现
-
-**职责**：实现接口，对接外部系统
-
-**原则**：
-- 实现领域层定义的接口
-- 包含框架、数据库、HTTP 等
-- 可替换
-
-**Repository 实现**：
-```go
-// internal/infrastructure/persistence/postgres/style_repository.go
-package postgres
-
-type StyleRepository struct {
-    db *gorm.DB
-}
-
-// 实现 domain.StyleRepository 接口
-func (r *StyleRepository) Save(ctx context.Context, style *style.Style) error {
-    model := toModel(style)
-    return r.db.WithContext(ctx).Create(model).Error
-}
-
-func (r *StyleRepository) FindByID(ctx context.Context, id string) (*style.Style, error) {
-    var model StyleModel
-    err := r.db.WithContext(ctx).First(&model, "id = ?", id).Error
-    if err != nil {
-        return nil, err
-    }
-    return toDomain(&model), nil
-}
-```
-
-**HTTP Handler**：
-```go
-// internal/infrastructure/http/handlers/style_handler.go
-package handlers
-
-type StyleHandler struct {
-    getStylesQuery *query.GetStylesHandler
-    createStyleCmd *command.CreateStyleHandler
-}
-
-func (h *StyleHandler) GetStyles(c *gin.Context) {
-    var req GetStylesRequest
-    if err := c.ShouldBindQuery(&req); err != nil {
-        c.JSON(400, gin.H{"error": err.Error()})
-        return
-    }
-    
-    // 调用应用层
-    result, err := h.getStylesQuery.Handle(c.Request.Context(), query.GetStylesQuery{
-        Category: req.Category,
-        Page:     req.Page,
-        Limit:    req.Limit,
-    })
-    
-    c.JSON(200, result)
-}
-```
+- `domain/style.Repository` 定义接口。
+- `infrastructure/persistence.StyleRepository` 用 GORM 实现接口。
+- `application/query.StyleQueryHandler` 依赖 `style.Repository` 接口。
+- `cmd/api/main.go` 负责把具体实现注入 handler。
 
 ## CQRS 实践
 
-### 命令 (Command) - 写操作
+### Command
 
-```go
-// 特点：
-// - 修改状态
-// - 返回错误或成功
-// - 可能触发事件
-// - 需要事务保证
+写操作：
 
-type CreateStyleCommand struct {
-    Title    string
-    Prompt   string
-    Category string
-}
+- 注册用户。
+- 更新用户信息。
+- 创建/更新/删除 style。
+- 创建 workflow。
+- 更新 workflow state。
 
-func (h *CreateStyleHandler) Handle(ctx context.Context, cmd CreateStyleCommand) error {
-    style := style.New(cmd.Title, cmd.Prompt, cmd.Category)
-    
-    if err := style.Validate(); err != nil {
-        return err
-    }
-    
-    return h.styleRepo.Save(ctx, style)
-}
+示例流程：
+
+```text
+HTTP request -> command handler -> domain validation -> repository -> DTO response
 ```
 
-### 查询 (Query) - 读操作
+### Query
 
-```go
-// 特点：
-// - 不修改状态
-// - 返回数据
-// - 可以使用缓存
-// - 可以直接查询读模型
+读操作：
 
-type GetStylesQuery struct {
-    Category string
-    Search   string
-    Page     int
-    Limit    int
-}
+- 认证用户。
+- 获取当前用户。
+- 获取 style 列表/详情。
+- 获取 workflow 列表/详情。
 
-func (h *GetStylesHandler) Handle(ctx context.Context, q GetStylesQuery) ([]*dto.StyleDTO, error) {
-    // 优先从缓存读取
-    if cached := h.cache.Get(q); cached != nil {
-        return cached, nil
-    }
-    
-    // 查询数据库
-    styles, err := h.styleRepo.FindAll(ctx, toFilter(q))
-    if err != nil {
-        return nil, err
-    }
-    
-    result := toDTO(styles)
-    h.cache.Set(q, result)
-    
-    return result, nil
-}
+示例流程：
+
+```text
+HTTP request -> query handler -> repository -> DTO response
 ```
 
-## 依赖注入 (DI)
+## 状态机
 
-使用构造函数注入，保持简单：
+Workflow 状态：
 
-```go
-// cmd/api/main.go
-func main() {
-    // 1. 初始化基础设施
-    db := initDB()
-    cache := initRedis()
-    logger := initLogger()
-    
-    // 2. 初始化仓储（实现接口）
-    styleRepo := postgres.NewStyleRepository(db)
-    userRepo := postgres.NewUserRepository(db)
-    
-    // 3. 初始化应用服务（注入依赖）
-    getStylesQuery := query.NewGetStylesHandler(styleRepo, cache)
-    createStyleCmd := command.NewCreateStyleHandler(styleRepo)
-    registerUserCmd := command.NewRegisterUserHandler(userRepo)
-    
-    // 4. 初始化 HTTP handlers
-    styleHandler := handlers.NewStyleHandler(getStylesQuery, createStyleCmd)
-    authHandler := handlers.NewAuthHandler(registerUserCmd)
-    
-    // 5. 启动服务器
-    router := gin.Default()
-    router.GET("/api/styles", styleHandler.GetStyles)
-    router.POST("/api/styles", styleHandler.CreateStyle)
-    router.Run(":8080")
-}
+```text
+DRAFT
+PENDING
+RUNNING
+PAUSED
+COMPLETED
+FAILED
+CANCELLED
 ```
 
-## TDD 工作流
+允许流转：
 
-### Red-Green-Refactor 循环
-
-1. **Red** - 写一个失败的测试
-2. **Green** - 写最简单的实现让测试通过
-3. **Refactor** - 重构代码，保持测试通过
-
-### 测试金字塔
-
-```
-        /\
-       /E2E\         ← 少量（慢、集成度高）
-      /------\
-     /Integration\   ← 适量（中速、部分集成）
-    /------------\
-   /    Unit      \  ← 大量（快、隔离）
-  /----------------\
+```text
+DRAFT -> PENDING | CANCELLED
+PENDING -> RUNNING | CANCELLED
+RUNNING -> PAUSED | COMPLETED | FAILED
+PAUSED -> RUNNING | CANCELLED
+COMPLETED -> terminal
+FAILED -> terminal
+CANCELLED -> terminal
 ```
 
-### 示例：TDD 开发新功能
+当前 API 只持久化 workflow 元数据和状态，不执行完整视频工作流。
 
-```go
-// 1. RED - 写测试（失败）
-// internal/domain/style/style_test.go
-func TestStyle_MarkAsFeatured(t *testing.T) {
-    style := style.New("Test", "Prompt", "Category")
-    
-    style.MarkAsFeatured()
-    
-    assert.True(t, style.Featured)
-}
+## 推荐算法边界
 
-// 2. GREEN - 最简实现（通过）
-func (s *Style) MarkAsFeatured() {
-    s.Featured = true
-}
+当前代码中存在：
 
-// 3. REFACTOR - 优化（如需要）
-func (s *Style) MarkAsFeatured() error {
-    if s.Featured {
-        return errors.New("already featured")
-    }
-    s.Featured = true
-    return nil
-}
+- `internal/infrastructure/http/handlers.StaticStyleRecommender`
+  - 当前 HTTP 运行时使用。
+  - 基于 query tokens 与 style tokens 的重叠比例打分。
+- `internal/domain/style/recommendation`
+  - 已实现 TF-IDF 和 Cosine Similarity。
+  - 后续应接入运行时，替代 handler 内的临时推荐器。
+
+## 启动注入流程
+
+`cmd/api/main.go`：
+
+1. Load config。
+2. Create logger。
+3. Connect PostgreSQL。
+4. AutoMigrate `styles`、`users`、`workflows`。
+5. Connect Redis。
+6. Initialize MinIO buckets。
+7. Create image provider。
+8. Create batch image service。
+9. Create image storage。
+10. Start Redis queue worker。
+11. Create hasher and JWT service。
+12. Create repositories。
+13. Load styles and create recommender snapshot。
+14. Create query/command handlers。
+15. Create HTTP handlers。
+16. Setup router and start server。
+17. Graceful shutdown。
+
+## 测试策略
+
+当前仓库包含：
+
+- 领域单元测试。
+- 应用层 command/query 测试。
+- HTTP handler 测试。
+- Provider 和 storage 测试。
+- 集成测试（需要数据库/MinIO）。
+
+常用命令：
+
+```bash
+cd backend
+go test ./...
+go test ./internal/infrastructure/http/handlers -v
+go test ./cmd/mock-image-provider -v
 ```
 
-### 测试策略
+## 后续改进
 
-**Unit Tests** (单元测试)：
-```go
-// 测试领域逻辑
-func TestStyleValidation(t *testing.T) {
-    tests := []struct {
-        name    string
-        style   *Style
-        wantErr bool
-    }{
-        {"valid", NewStyle("Title", "Prompt", "Cat"), false},
-        {"empty title", NewStyle("", "Prompt", "Cat"), true},
-    }
-    
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            err := tt.style.Validate()
-            if (err != nil) != tt.wantErr {
-                t.Errorf("want error: %v, got: %v", tt.wantErr, err)
-            }
-        })
-    }
-}
-```
-
-**Integration Tests** (集成测试)：
-```go
-// 测试仓储实现
-func TestStyleRepository_Save(t *testing.T) {
-    // 使用测试数据库
-    db := setupTestDB(t)
-    defer cleanupTestDB(t, db)
-    
-    repo := postgres.NewStyleRepository(db)
-    style := style.New("Test", "Prompt", "Category")
-    
-    err := repo.Save(context.Background(), style)
-    assert.NoError(t, err)
-    
-    // 验证保存成功
-    found, err := repo.FindByID(context.Background(), style.ID)
-    assert.NoError(t, err)
-    assert.Equal(t, style.Title, found.Title)
-}
-```
-
-**E2E Tests** (端到端测试)：
-```go
-// 测试完整 HTTP 流程
-func TestCreateStyle_E2E(t *testing.T) {
-    server := setupTestServer(t)
-    defer server.Close()
-    
-    resp, err := http.Post(server.URL+"/api/styles", "application/json", 
-        strings.NewReader(`{"title":"Test","prompt":"Prompt","category":"Cat"}`))
-    
-    assert.NoError(t, err)
-    assert.Equal(t, 201, resp.StatusCode)
-}
-```
-
-## 最佳实践
-
-### 1. 保持简单（Go Way）
-
-```go
-// ❌ 过度抽象
-type StyleService interface {
-    CreateStyle(StyleDTO) error
-    UpdateStyle(StyleDTO) error
-    DeleteStyle(string) error
-}
-
-// ✅ 简洁实用
-type StyleRepository interface {
-    Save(context.Context, *Style) error
-    FindByID(context.Context, string) (*Style, error)
-}
-```
-
-### 2. 接口隔离
-
-```go
-// ❌ 胖接口
-type Repository interface {
-    Save(...) error
-    Update(...) error
-    Delete(...) error
-    FindByID(...) error
-    FindAll(...) error
-    Count(...) int
-}
-
-// ✅ 小接口组合
-type Saver interface {
-    Save(context.Context, *Style) error
-}
-
-type Finder interface {
-    FindByID(context.Context, string) (*Style, error)
-}
-
-type Repository interface {
-    Saver
-    Finder
-}
-```
-
-### 3. 表驱动测试
-
-```go
-func TestValidation(t *testing.T) {
-    tests := []struct {
-        name    string
-        input   string
-        wantErr bool
-    }{
-        {"valid email", "test@example.com", false},
-        {"invalid email", "invalid", true},
-        {"empty", "", true},
-    }
-    
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            // 测试逻辑
-        })
-    }
-}
-```
-
-### 4. 错误处理
-
-```go
-// internal/pkg/errors/errors.go
-package errors
-
-type DomainError struct {
-    Code    string
-    Message string
-    Err     error
-}
-
-func (e *DomainError) Error() string {
-    return e.Message
-}
-
-// 预定义错误
-var (
-    ErrNotFound = &DomainError{Code: "NOT_FOUND", Message: "resource not found"}
-    ErrInvalidInput = &DomainError{Code: "INVALID_INPUT", Message: "invalid input"}
-)
-```
-
-## 参考资料
-
-- [Three Dots Labs - DDD Lite in Go](https://threedots.tech/post/ddd-lite-in-go-introduction/)
-- [Three Dots Labs - Basic CQRS in Go](https://threedots.tech/post/basic-cqrs-in-go/)
-- [Clean Architecture in Golang](https://pkritiotis.io/clean-architecture-in-golang/)
-- [Dependency Inversion in Go](https://www.ompluscator.com/article/golang/practical-solid-dependency-inversion/)
-- [TDD in Go](https://threedots.tech/post/introducing-clean-architecture/)
+- 接入 TF-IDF + Cosine 推荐器。
+- 把 Redis queue worker 接到真实视频工作流执行器。
+- 增加任务执行日志和中间产物模型。
+- 增加 OpenAPI 生成。
+- 增加统一错误码和错误响应格式。
+- 增加限流、审计日志和 RBAC。

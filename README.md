@@ -10,295 +10,188 @@ _Experiment. Automate. Scale._
 
 可视化 AI 内容生产平台 - 让专业团队批量生产 AI 视频的工作流实验室
 
-[![Status](https://img.shields.io/badge/status-MVP%20开发中-0EA5E9)](https://github.com/sine-io/labhaus)
+[![Status](https://img.shields.io/badge/status-MVP%20image%20loop%20ready-0EA5E9)](https://github.com/sine-io/labhaus)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-10B981)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-10B981)](https://github.com/sine-io/labhaus/pulls)
-
-[English](README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
 
 </div>
 
 ---
 
-## 当前主线和 MVP 范围
+## 当前状态
 
-当前代码主线收敛为：
+Labhaus 的长期方向仍是 **AI 视频工作流实验室**：用可视化工作流、样式库和批量执行能力，把一次成功的内容实验复制到更多素材和视频中。
+
+当前代码已经收敛到第一个可运行 MVP：
+
+1. **认证**：用户注册、登录、Bearer Token 保护 API。
+2. **样式推荐**：用户输入创意描述，后端基于当前样式数据返回匹配样式。
+3. **批量生图**：用户提交多条 prompt，后端调用配置的图像 Provider，结果写入 MinIO 并返回预签名下载链接。
+4. **本地演示闭环**：Docker Compose 提供 PostgreSQL、Redis、MinIO、Go API 和本地 mock image provider。
+
+当前 MVP **不包含**：文章解析、TTS、FFmpeg 视频合成、React Flow 可视化编辑器、模板市场。这些仍是后续视频工作流阶段目标。
+
+## 当前主线
 
 - **后端**：`backend/` Go API（Gin + PostgreSQL + Redis + MinIO）
 - **前端**：`apps/web/` Next.js App Router
+- **包管理**：pnpm workspace + Turborepo
+- **本地演示**：`docker-compose.yml` 启动 API 依赖和 mock image provider；Web 前端单独运行
 
-早期 TypeScript API 和共享包遗留代码已删除；如需参考旧实现，请从 git history 查看。`frontend/` 若在本地存在，仅是未跟踪的旧草稿目录，不属于当前 workspace。
+早期 TypeScript API、共享包和执行报告类文档已移除。如需参考旧实现，请从 git history 查看。
 
-近期 MVP 先交付两个可验证能力：
+## 为什么是 Labhaus？
 
-1. **样式推荐**：用户登录后输入创意描述，返回匹配样式。
-2. **批量生图**：用户登录后提交多条 prompt，后端调用配置的图像 Provider 并把结果存入 MinIO。
+大多数 AI 视频工具都在解决“如何快速生成单条内容”，但专业团队真正的痛点是：
 
-“文章 → 视频”、可视化工作流编辑器、TTS/FFmpeg 合成、模板市场仍是后续阶段目标，当前不作为已完成能力描述。
+- 单次实验成本高：测试一个创意需要反复调 prompt、调风格、调生成参数。
+- 成功配方难复制：风格一致性依赖人工记忆和复制粘贴。
+- 批量生产缺工具：CSV 导入、并发执行、API 集成、素材管理通常要自己写。
 
----
+Labhaus 的定位不是一次性生成器，而是内容实验室：
 
-## 💡 为什么是 Labhaus？
+1. **实验**：快速验证创意、视觉风格和生成参数。
+2. **复用**：把可行的样式和 prompt 作为后续工作流输入。
+3. **规模化**：批量生成素材，后续扩展为批量视频工作流。
 
-> **"Where content experiments succeed"**  
-> 内容创作不是流水线，而是实验室
-
-大多数 AI 视频工具都在解决"如何快速生成"，但专业团队真正的痛点是：
-
-- ❌ **单次实验成本太高** - 测试一个创意需要 2-4 小时
-- ❌ **成功配方难以复制** - 风格一致性依赖人工
-- ❌ **批量生产缺乏工具** - CSV 导入、并发执行、API 集成都要自己写
-
-**Labhaus 提供的是实验平台，而不是生成工具**：
-
-1. **实验** - 可视化工作流编辑器，快速测试创意
-2. **验证** - 人工介入节点，确保质量
-3. **规模化** - 一键批量复制，保持风格一致性
-
----
-
-## 🎯 核心价值
-
-### 对比主流方案
-
-|              | MoneyPrinterTurbo | Runway    | **Labhaus**           |
-| ------------ | ----------------- | --------- | --------------------- |
-| **定位**     | 一键生成工具      | SaaS 平台 | **工作流实验室**      |
-| **目标用户** | 个人创作者        | 企业用户  | **专业团队+企业**     |
-| **核心能力** | 快速、简单        | 全自动    | **可视化工作流+批量** |
-| **可定制性** | ⭐⭐              | ⭐⭐      | **⭐⭐⭐⭐⭐**        |
-| **批量能力** | ⭐⭐⭐            | ⭐        | **⭐⭐⭐⭐⭐**        |
-| **样式库**   | ❌                | ❌        | **✅ 500+**           |
-| **模板市场** | ❌                | ❌        | **✅**                |
-| **私有部署** | ✅                | ❌        | **✅**                |
-
-### 三大独特优势
-
-#### 1. 可视化工作流编辑器 🔥
-
-拖拽式节点编辑，无需编程
-
-- 输入节点：文本/URL/CSV
-- 处理节点：LLM/样式选择/生图/TTS/合成
-- 输出节点：下载/S3/Telegram
-- 人工介入：预览、审核、修改
-
-#### 2. 500+ GPT-Image-2 样式库
-
-来自 [awesome-gpt-image-2](https://github.com/sine-io/awesome-gpt-image-2)
-
-- 工业级提示词案例
-- 按场景/风格分类
-- 一键应用到工作流
-
-#### 3. 模板市场（即将推出）
-
-- 分享成功的工作流配方
-- 购买/出售优质模板
-- 社区驱动的网络效应
-
----
-
-## 🚀 快速开始
+## 快速开始
 
 ### 前置要求
 
-- Docker & Docker Compose
-- Python 3.11+
+- Docker 和 Docker Compose
 - Node.js 20+
+- pnpm 11（仓库当前锁定 `pnpm@11.8.0`）
+- Go 1.25+（仅裸跑 Go API 或运行 Go 测试时需要）
 
-### 一键启动
+### 启动本地 MVP
 
 ```bash
-# 克隆项目
 git clone https://github.com/sine-io/labhaus.git
 cd labhaus
 
-# 启动服务
-docker-compose up -d
+# 启动 PostgreSQL、Redis、MinIO、mock image provider 和 Go API
+docker compose up -d --build
 
-# 访问 Web 界面
-open http://localhost:3000
+# 导入本地 demo 样式数据（当前 seed 为 12 条，后续目标是接入 500+ 样式库）
+docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
+
+# API 启动时会加载样式快照；导入 seed 后需要重启 API
+docker compose restart api
+
+# 启动 Next.js 前端
+pnpm install
+cp apps/web/.env.example apps/web/.env.local
+pnpm --filter @labhaus/web dev
 ```
 
-### 运行第一个 MVP 流程
+访问：
 
-1. 注册/登录获取 Bearer Token
-2. 输入创意描述，调用样式推荐
-3. 选择或复制样式 prompt
-4. 输入多条 prompts，调用批量生图
-5. 下载 MinIO 预签名链接返回的图片
+- Web: http://localhost:3000
+- API: http://localhost:8080
+- MinIO Console: http://localhost:9001
+- Mock Image Provider: http://localhost:8089
 
-详细文档：[快速开始指南](docs/guides/quick-start.md)
+### 一键 Smoke
 
----
-
-## 📦 项目架构
-
+```bash
+scripts/mvp-smoke.sh
 ```
+
+脚本会依次执行健康检查、注册/登录、样式推荐和批量生图。
+
+## 当前 API 概览
+
+所有受保护端点使用：
+
+```http
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+主要端点：
+
+| 能力             | 方法与路径                   |
+| ---------------- | ---------------------------- |
+| 健康检查         | `GET /api/health`            |
+| 注册             | `POST /api/users/register`   |
+| 登录             | `POST /api/users/login`      |
+| 当前用户         | `GET /api/users/me`          |
+| 样式列表         | `GET /api/styles`            |
+| 样式推荐         | `POST /api/styles/recommend` |
+| 创建工作流元数据 | `POST /api/workflows`        |
+| 批量生图         | `POST /api/images/generate`  |
+
+完整契约见 [API 设计文档](docs/architecture/api-design.md)。
+
+## 项目结构
+
+```text
 labhaus/
-├── backend/              # Go 后端服务
-│   ├── cmd/api/         # 入口
-│   ├── internal/        # 私有代码
-│   │   ├── api/        # HTTP 层
-│   │   ├── service/    # 业务逻辑
-│   │   └── repository/ # 数据访问
-│   └── migrations/      # 数据库迁移
 ├── apps/
-│   └── web/             # Next.js 前端（当前主线）
-└── docs/                # 完整文档
+│   └── web/                         # Next.js 前端
+├── backend/                         # Go 后端服务
+│   ├── cmd/api/                     # API 入口
+│   ├── cmd/mock-image-provider/     # 本地 demo 图像 Provider
+│   ├── internal/
+│   │   ├── application/             # CQRS handlers 和 DTO
+│   │   ├── domain/                  # User/Style/Workflow/Image Provider 领域模型
+│   │   └── infrastructure/          # HTTP、持久化、队列、存储、Provider 适配
+│   └── seeds/styles.sql             # 本地 demo 样式 seed
+├── docs/                            # 当前产品、架构、开发和部署文档
+├── scripts/mvp-smoke.sh             # MVP API smoke 脚本
+└── docker-compose.yml               # 本地依赖和 Go API 编排
 ```
 
-**技术栈**：
+## 技术栈
 
-- 前端：React + TypeScript + Next.js + TailwindCSS
-- 后端：Go + Gin + PostgreSQL + Redis
-- 工作流：自研状态机 + Asynq 任务队列
-- 存储：MinIO / S3
+- 前端：Next.js 16、React 19、TypeScript、Tailwind CSS 4
+- 后端：Go 1.25、Gin、GORM、PostgreSQL 16、Redis 7、MinIO
+- 认证：JWT Bearer Token、bcrypt
+- 图像 Provider：兼容 `POST /v1/generate` 的 HTTP Provider；本地使用 mock image provider
+- 测试：Node built-in test runner、TypeScript typecheck、Go testing/testify
 
-详细架构：[系统设计文档](docs/architecture/system-design.md)
+## 路线图
 
----
+### 已实现：图像素材 MVP
 
-## 🎬 典型使用场景
+- [x] Go 后端 + Next 前端主线
+- [x] 用户注册/登录和 Bearer Token
+- [x] 认证后的样式推荐
+- [x] 认证后的批量生图
+- [x] MinIO 存储和预签名下载链接
+- [x] 本地 mock image provider 和 smoke 脚本
 
-### 场景 1：营销团队批量生产广告素材
+### 下一阶段：视频工作流
 
-**痛点**：需要测试 10 种文案 × 5 种视觉风格 = 50 个视频  
-**方案**：
+- [ ] “文章/文本 -> 分镜 -> 生图 -> TTS -> FFmpeg 合成 -> MP4”闭环
+- [ ] 任务监控页面和执行日志
+- [ ] 失败重试、进度追踪和中间产物预览
 
-1. CSV 导入 10 种文案
-2. 工作流配置 5 种样式库风格
-3. 批量生成 50 个视频
-4. 人工筛选最优组合
+### 后续阶段
 
-**效果**：3 小时完成，成本降低 80%
+- [ ] React Flow 可视化工作流编辑器
+- [ ] 500+ 样式库导入与推荐优化
+- [ ] 模板保存、分享和市场化
+- [ ] 团队协作、配额、计费和私有化部署能力
 
-### 场景 2：内容创作者保持风格一致性
+## 文档索引
 
-**痛点**：手动调整每个视频的视觉风格，耗时且不一致  
-**方案**：
+- 产品：[PRD](docs/product/PRD.md) · [用户故事地图](docs/product/user-story-map.md)
+- 架构：[系统设计](docs/architecture/system-design.md) · [API 设计](docs/architecture/api-design.md) · [Go DDD 架构](docs/architecture/GO_DDD_ARCHITECTURE.md)
+- 开发：[快速开始](docs/guides/quick-start.md) · [本地开发](docs/guides/local-development.md) · [技术栈](docs/TECH_STACK.md)
+- 部署：[部署指南](docs/DEPLOYMENT.md)
 
-1. 第一次实验找到最佳风格
-2. 保存为工作流模板
-3. 后续批量应用模板
+## 贡献
 
-**效果**：风格一致性 > 95%，单条时间从 4 小时 → 30 分钟
+参考 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-### 场景 3：开发者集成 AI 视频能力
+## 许可证
 
-**痛点**：从零开发需要 3-6 个月  
-**方案**：
-
-1. Docker 私有化部署
-2. RESTful API 调用
-3. Webhook 异步回调
-
-**效果**：1 周完成集成，深度可定制
-
----
-
-## 📊 开发路线图
-
-### ✅ Phase 1: 基础整合（已完成）
-
-- [x] 创建 Monorepo 结构
-- [x] 样式库数据迁移
-- [x] 统一 API 网关
-- [x] 工作流引擎基础
-- [x] 用户认证系统
-- [x] 端到端集成测试
-
-**完成时间**: 2026-06-19  
-**详细总结**: [Phase 1 总结文档](docs/PHASE_1_SUMMARY.md)
-
-### 🔄 Phase 2: 当前 MVP（进行中）
-
-- [ ] Go 后端 + apps/web 契约收敛
-- [ ] 认证后的样式推荐
-- [ ] 认证后的批量生图
-- [ ] 显式图像 Provider 配置
-
-### ⏳ Phase 2.x: 视频工作流（后续）
-
-- [ ] "文章 → 视频" 完整流程
-- [ ] 任务监控面板
-- [ ] TTS / FFmpeg 合成
-
-### ⏳ Phase 3: 可视化编辑器
-
-- [ ] React Flow 节点编辑器
-- [ ] 10+ 内置节点
-- [ ] 人工介入和预览
-
-### ⏳ Phase 4: 模板市场
-
-- [ ] 模板保存/分享
-- [ ] 付费模板
-- [ ] 社区评分
-
-完整路线图：[MVP 开发计划](docs/planning/mvp-roadmap.md)
-
----
-
-## 💰 商业模式
-
-### 定价方案
-
-| 版本       | 价格   | 核心功能                                           |
-| ---------- | ------ | -------------------------------------------------- |
-| **免费版** | $0     | 基础工作流、公共样式库、月生成 10 个视频           |
-| **专业版** | $29/月 | 批量并发（10 并发）、私有样式库、月生成 100 个视频 |
-| **企业版** | 定制   | 私有化部署、无限并发、白标服务、SLA 保障           |
-
-### 收入来源
-
-1. **订阅费用**（主要）
-2. **模板市场分成**（30%）
-3. **API 调用超额费**
-4. **专业服务**（定制开发、培训）
-
----
-
-## 🤝 参与贡献
-
-项目目前处于 MVP 阶段，Beta 版本发布后将开放：
-
-- 🐛 Bug 报告和功能建议
-- 📝 文档改进
-- 🎨 样式库贡献
-- 🛠️ 模板市场分享
-
-贡献指南：[CONTRIBUTING.md](CONTRIBUTING.md)
-
----
-
-## 📚 文档索引
-
-- **产品文档**：[PRD](docs/product/PRD.md) · [用户故事](docs/product/user-story-map.md)
-- **调研报告**：[竞品分析](docs/research/competitive-analysis.md) · [方法论分析](docs/research/methodology-analysis.md)
-- **架构设计**：[系统设计](docs/architecture/system-design.md) · [API 接口](docs/architecture/api-design.md)
-- **开发指南**：[快速开始](docs/guides/quick-start.md) · [本地开发](docs/guides/local-development.md)
-
----
-
-## 📄 许可证
-
-本项目采用 [GNU Affero General Public License v3.0](LICENSE) 开源协议
-
----
-
-## 📧 联系我们
-
-- **项目主页**：https://github.com/sine-io/labhaus
-- **Issues**：https://github.com/sine-io/labhaus/issues
-- **Discussions**：https://github.com/sine-io/labhaus/discussions
+本项目采用 [GNU Affero General Public License v3.0](LICENSE) 开源协议。
 
 ---
 
 <div align="center">
-
-**Built with ❤️ by the Labhaus Team**
 
 _Where content experiments succeed_
 

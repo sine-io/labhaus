@@ -1,180 +1,149 @@
 # Infrastructure Layer
 
-基础设施层实现了所有技术细节，包括数据库持久化、密码哈希等。
+基础设施层承接框架、数据库、队列、存储、认证和外部 Provider 适配，实现领域层与应用层定义的接口。
 
 ## 组件
 
-### 1. 数据库 Repository 实现
+### HTTP
 
-**StyleRepository** - GORM 实现
-- ✅ CRUD 操作
-- ✅ 全文搜索（LIKE）
-- ✅ 分类和标签过滤
-- ✅ JSON 序列化 Tags
-- ✅ 软删除
+- Gin router：`internal/infrastructure/http/router.go`
+- Auth middleware：JWT Bearer Token 校验，并把 `user_id`、`user_email`、`user_role` 写入 Gin context
+- Handlers：
+  - `health.go`
+  - `user.go`
+  - `style.go`
+  - `workflow.go`
+  - `image.go`
 
-**UserRepository** - GORM 实现
-- ✅ CRUD 操作
-- ✅ 按邮箱查询
-- ✅ 邮箱唯一性检查
-- ✅ 软删除
+### Persistence
 
-**WorkflowRepository** - GORM 实现
-- ✅ CRUD 操作
-- ✅ 按用户查询
-- ✅ 状态过滤
-- ✅ JSON 序列化 Config 和 Result
-- ✅ 快速状态更新
-- ✅ 软删除
+GORM + PostgreSQL 实现：
 
-### 2. 密码哈希
+- `StyleRepository`
+  - CRUD
+  - category / tags 过滤
+  - LIKE 搜索
+  - tags JSON 字符串序列化
+  - soft delete
+- `UserRepository`
+  - CRUD
+  - 按 email 查询
+  - email 唯一性检查
+  - soft delete
+- `WorkflowRepository`
+  - CRUD
+  - 按 user 查询
+  - state 过滤
+  - config/result JSONB
+  - state 快速更新
+  - soft delete
 
-**BcryptHasher** - Bcrypt 实现
-- ✅ Hash() - 生成密码哈希
-- ✅ Compare() - 验证密码
-- ✅ 默认 Cost: 10
+### Auth
 
-### 3. 数据库连接
+- `auth.JWTService`：生成和校验 HS256 JWT。
+- `persistence.BcryptHasher`：bcrypt hash/compare，默认 cost 为 10。
 
-**NewDB()** - PostgreSQL 连接
-- ✅ GORM v2
-- ✅ 连接池管理
-- ✅ 日志模式配置
+### Queue
 
-**AutoMigrate()** - 自动迁移
-- ✅ 创建表结构
-- ✅ 更新字段
-- ✅ 索引管理
+- Redis list + hash 实现的轻量队列。
+- 支持 pending/processing/completed/dead 状态、retry count 和 dead letter queue。
+- 当前 workflow task handler 只解析 payload 并打印日志；实际视频工作流执行逻辑待接入。
 
-## 使用示例
+### Storage
 
-### 初始化数据库
+- `MinIOStorage`：通用 bucket/object 操作。
+- `MinIOImageStorage`：当前批量生图接口使用的 image storage，负责上传、下载、删除、存在性检查和预签名 URL。
+- API 启动时会确保 `workflows`、`images`、`videos`、`temp` buckets 存在。
 
-```go
-config := persistence.DBConfig{
-    Host:     "localhost",
-    Port:     5432,
-    User:     "postgres",
-    Password: "postgres",
-    DBName:   "labhaus",
-    SSLMode:  "disable",
-}
+### Image Provider
 
-db, err := persistence.NewDB(config)
-if err != nil {
-    log.Fatal(err)
-}
-
-// 运行迁移
-if err := persistence.AutoMigrate(db); err != nil {
-    log.Fatal(err)
-}
-```
-
-### 创建 Repository
-
-```go
-styleRepo := persistence.NewStyleRepository(db)
-userRepo := persistence.NewUserRepository(db)
-workflowRepo := persistence.NewWorkflowRepository(db)
-```
-
-### 创建密码哈希器
-
-```go
-hasher := persistence.NewBcryptHasher()
-
-// 哈希密码
-hash, err := hasher.Hash("mypassword")
-
-// 验证密码
-err = hasher.Compare(hash, "mypassword")
-```
-
-### 使用 Repository
-
-```go
-ctx := context.Background()
-
-// 创建 Style
-entity, _ := style.New("Anime", "desc", "prompt", "Art", []string{"anime"})
-err := styleRepo.Create(ctx, entity)
-
-// 查询 Style
-found, err := styleRepo.FindByID(ctx, entity.ID)
-
-// 搜索 Styles
-results, err := styleRepo.Search(ctx, "anime", 10)
-```
+- `image/gptimage2`：兼容 `POST /v1/generate` 的 HTTP Provider 适配器。
+- `image/mock`：测试用 Provider。
+- `cmd/mock-image-provider`：本地 demo HTTP Provider，可通过 Docker Compose 启动。
 
 ## 数据库模型
 
 ### StyleModel
-```
-id           VARCHAR(36)  PRIMARY KEY
-name         VARCHAR(100) NOT NULL, INDEX
-description  VARCHAR(500)
-prompt       TEXT         NOT NULL
-category     VARCHAR(50)  INDEX
-tags         TEXT         (JSON array)
-created_at   TIMESTAMP    NOT NULL
-updated_at   TIMESTAMP    NOT NULL
-deleted_at   TIMESTAMP    INDEX (soft delete)
+
+```text
+id           varchar(36) primary key
+name         varchar(100) not null, index
+description  varchar(500)
+prompt       text not null
+category     varchar(50), index
+tags         text            # JSON array string
+created_at   timestamp not null
+updated_at   timestamp not null
+deleted_at   timestamp, index
 ```
 
 ### UserModel
-```
-id            VARCHAR(36)  PRIMARY KEY
-email         VARCHAR(255) NOT NULL, UNIQUE INDEX
-password_hash VARCHAR(255) NOT NULL
-name          VARCHAR(100) NOT NULL
-role          VARCHAR(20)  NOT NULL, DEFAULT 'user'
-created_at    TIMESTAMP    NOT NULL
-updated_at    TIMESTAMP    NOT NULL
-deleted_at    TIMESTAMP    INDEX (soft delete)
+
+```text
+id            varchar(36) primary key
+email         varchar(255) not null, unique index
+password_hash varchar(255) not null
+name          varchar(100) not null
+role          varchar(20) not null default 'user'
+created_at    timestamp not null
+updated_at    timestamp not null
+deleted_at    timestamp, index
 ```
 
 ### WorkflowModel
+
+```text
+id         varchar(36) primary key
+user_id    varchar(36) not null, index
+style_id   varchar(36) not null, index
+state      varchar(20) not null, index
+config     jsonb not null
+result     jsonb null
+created_at timestamp not null
+updated_at timestamp not null
+deleted_at timestamp, index
 ```
-id         VARCHAR(36)  PRIMARY KEY
-user_id    VARCHAR(36)  NOT NULL, INDEX
-style_id   VARCHAR(36)  NOT NULL, INDEX
-state      VARCHAR(20)  NOT NULL, INDEX
-config     JSONB        NOT NULL
-result     JSONB        NULL
-created_at TIMESTAMP    NOT NULL
-updated_at TIMESTAMP    NOT NULL
-deleted_at TIMESTAMP    INDEX (soft delete)
+
+## 使用示例
+
+```go
+db, err := persistence.NewDB(persistence.DBConfig{
+    Host:     "localhost",
+    Port:     5432,
+    User:     "labhaus",
+    Password: "labhaus_dev_password",
+    DBName:   "labhaus",
+    SSLMode:  "disable",
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+if err := persistence.AutoMigrate(db); err != nil {
+    log.Fatal(err)
+}
+
+styleRepo := persistence.NewStyleRepository(db)
+userRepo := persistence.NewUserRepository(db)
+workflowRepo := persistence.NewWorkflowRepository(db)
+hasher := persistence.NewBcryptHasher()
 ```
 
 ## 集成测试
 
-集成测试需要 PostgreSQL 数据库：
+集成测试需要 PostgreSQL：
 
 ```bash
-# 启动 PostgreSQL (Docker)
 docker run -d \
   --name postgres-test \
-  -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_DB=labhaus_test \
+  -e POSTGRES_USER=labhaus \
+  -e POSTGRES_PASSWORD=labhaus_dev_password \
+  -e POSTGRES_DB=labhaus \
   -p 5432:5432 \
-  postgres:14
+  postgres:16-alpine
 
-# 运行集成测试
+cd backend
 go test ./tests/integration/... -v
 ```
 
-## 依赖
-
-- `gorm.io/gorm` - ORM 框架
-- `gorm.io/driver/postgres` - PostgreSQL 驱动
-- `github.com/google/uuid` - UUID 生成
-- `golang.org/x/crypto/bcrypt` - 密码哈希
-
-## 架构优势
-
-✅ **依赖倒置（DIP）**: 实现领域层定义的接口  
-✅ **技术隔离**: 领域层不知道 GORM 存在  
-✅ **易于替换**: 可切换到其他数据库或 ORM  
-✅ **测试友好**: 集成测试与单元测试分离  
-✅ **软删除**: 保留历史数据，支持恢复  
+MinIO storage 相关测试需要 MinIO 服务运行。

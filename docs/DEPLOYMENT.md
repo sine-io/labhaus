@@ -1,33 +1,27 @@
 # Labhaus 部署指南
 
-当前主线部署对象：
+当前可部署对象：
 
 - `backend/`：Go API，默认端口 `8080`。
 - `apps/web/`：Next.js 前端，默认端口 `3000`。
-- 依赖服务：PostgreSQL、Redis、MinIO、图像 Provider。
+- 依赖服务：PostgreSQL、Redis、MinIO/S3、图像 Provider。
 
-早期 TypeScript API 和共享包遗留代码已删除；如需参考旧部署方案，请从 git history 查看。
+Docker Compose 当前只编排后端依赖、mock image provider 和 Go API；Web 前端需要单独运行或部署到支持 Next.js 的平台。
 
 ## 环境要求
 
-- Linux 服务器（推荐 Ubuntu 22.04+）
-- Docker 和 Docker Compose（推荐）
-- Node.js 20+ 和 pnpm 9+（构建/运行前端需要）
-- Go 1.25+（裸跑 Go API 需要）
+- Docker 和 Docker Compose
+- Node.js 20+、pnpm 11（构建/运行前端）
+- Go 1.25+（裸机编译/运行 Go API）
 
-## 方式 1：Docker Compose（推荐开发/演示）
+## 方式 1：Docker Compose 本地演示
 
 ```bash
 git clone https://github.com/sine-io/labhaus.git
 cd labhaus
 
-# 启动依赖、mock image provider 和 Go API
 docker compose up -d --build
-
-# 导入样式种子数据
 docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
-
-# API 启动时会加载样式快照；导入后重启 API
 docker compose restart api
 ```
 
@@ -37,10 +31,11 @@ docker compose restart api
 - MinIO Console: http://localhost:9001
 - Mock Image Provider: http://localhost:8089
 
-前端可单独运行：
+启动 Web：
 
 ```bash
 pnpm install
+cp apps/web/.env.example apps/web/.env.local
 pnpm --filter @labhaus/web dev
 ```
 
@@ -48,23 +43,20 @@ pnpm --filter @labhaus/web dev
 
 ## 方式 2：裸机运行 Go API
 
-### 1. 准备依赖服务
+### 1. 准备依赖
 
 ```bash
 docker compose up -d postgres redis minio mock-image-provider
 docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
 ```
 
-### 2. 配置后端环境变量
+### 2. 配置环境变量
 
-```bash
-cp backend/.env.example backend/.env
-```
-
-最小必需配置：
+最小本地配置：
 
 ```bash
 LABHAUS_SERVER_PORT=8080
+LABHAUS_SERVER_ENVIRONMENT=development
 LABHAUS_DATABASE_HOST=localhost
 LABHAUS_DATABASE_PORT=5432
 LABHAUS_DATABASE_USER=labhaus
@@ -78,11 +70,14 @@ LABHAUS_MINIO_ACCESS_KEY=minioadmin
 LABHAUS_MINIO_SECRET_KEY=minioadmin
 LABHAUS_MINIO_USE_SSL=false
 LABHAUS_JWT_SECRET_KEY=change-me
+LABHAUS_JWT_TOKEN_DURATION=24
 LABHAUS_IMAGE_PROVIDER_BASE_URL=http://localhost:8089
 LABHAUS_IMAGE_PROVIDER_API_KEY=dev-mock-key
 ```
 
-### 3. 启动 Go API
+`LABHAUS_IMAGE_PROVIDER_BASE_URL` 和 `LABHAUS_IMAGE_PROVIDER_API_KEY` 是必填项；缺失时 API 会启动失败。
+
+### 3. 启动
 
 ```bash
 cd backend
@@ -105,21 +100,26 @@ pnpm --filter @labhaus/web build
 pnpm --filter @labhaus/web start
 ```
 
-`apps/web/.env.local` 至少需要指向 Go API：
+`apps/web/.env.local`：
 
 ```bash
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+BACKEND_URL=http://localhost:8080
 ```
+
+`BACKEND_URL` 是 Next.js 服务端代理访问的 Go API 地址。
 
 ## 生产部署建议
 
 ### Go API
 
-- 使用 systemd、容器平台或进程管理器托管编译后的 Go 二进制。
-- 必须显式配置 `LABHAUS_IMAGE_PROVIDER_BASE_URL` 和 `LABHAUS_IMAGE_PROVIDER_API_KEY`。
-- 生产环境应使用强随机 `LABHAUS_JWT_SECRET_KEY`。
+- 使用容器平台、systemd 或进程管理器托管。
+- 使用 PostgreSQL 16+。
+- 使用 Redis 7+。
+- 使用生产级 MinIO/S3。
+- 使用真实图像 Provider，并按环境隔离 API key。
+- 使用强随机 `LABHAUS_JWT_SECRET_KEY`。
 
-示例：
+编译示例：
 
 ```bash
 cd backend
@@ -129,9 +129,30 @@ LABHAUS_SERVER_ENVIRONMENT=production ./labhaus-api
 
 ### Next.js 前端
 
-- 使用 `pnpm --filter @labhaus/web build` 生成生产构建。
-- 使用 `pnpm --filter @labhaus/web start` 或部署到支持 Next.js 的平台。
-- 通过 `NEXT_PUBLIC_API_BASE_URL` 指向公开可访问的 Go API 地址。
+- 使用 `pnpm --filter @labhaus/web build` 构建。
+- 运行时设置 `BACKEND_URL` 指向 Go API 的内网或公网地址。
+- 如果前端和 API 分域部署，浏览器仍请求 Next.js 自身 `/api/*` 代理，不需要暴露 Go API 给浏览器。
+
+### 图像 Provider
+
+生产 Provider 需兼容：
+
+```http
+POST /v1/generate
+Authorization: Bearer <api-key>
+Content-Type: application/json
+```
+
+返回：
+
+```json
+{
+  "image_url": "https://provider.example/images/xxx.png",
+  "created_at": "2026-07-08T00:00:00Z"
+}
+```
+
+API 会下载 `image_url` 并上传到 MinIO/S3。
 
 ### Nginx 反向代理示例
 
@@ -161,12 +182,13 @@ cd backend
 go build -o labhaus-api ./cmd/api
 ```
 
-之后按你的进程管理方式重启 Go API 和 Next.js 前端。
+之后按进程管理方式重启 Go API 和 Next.js 前端。
 
 ## 安全建议
 
-1. 更换所有默认密钥和密码。
-2. 限制 PostgreSQL、Redis、MinIO 只允许可信网络访问。
-3. 给 API 和前端配置 HTTPS。
-4. 定期更新基础镜像和系统依赖。
-5. 生产图像 Provider 使用独立 API key，并按环境隔离。
+1. 更换默认数据库、MinIO、JWT 和 Provider 密钥。
+2. PostgreSQL、Redis、MinIO 不要直接暴露到公网。
+3. API 和 Web 使用 HTTPS。
+4. Provider API key 按环境隔离。
+5. 对生产环境补充限流、审计日志、备份和监控。
+6. 定期更新基础镜像和系统依赖。

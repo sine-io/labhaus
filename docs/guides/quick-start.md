@@ -1,10 +1,16 @@
 # Labhaus 快速开始指南
 
+本指南用于从干净 checkout 跑通当前 MVP：
+
+> 注册/登录 -> 样式推荐 -> 批量生图 -> MinIO 预签名图片链接
+
 ## 前置要求
 
-- **Docker Desktop** (macOS/Windows) 或 Docker + Docker Compose (Linux)
-- **Git**
-- **Node.js** 20+ 和 pnpm 9+ (仅开发模式需要)
+- Docker 和 Docker Compose
+- Node.js 20+
+- pnpm 11（仓库当前使用 `pnpm@11.8.0`）
+- `curl` 和 `jq`（运行 smoke 脚本需要）
+- Go 1.25+（裸跑 Go API 或运行 Go 测试需要）
 
 ## 1. 克隆项目
 
@@ -13,94 +19,91 @@ git clone https://github.com/sine-io/labhaus.git
 cd labhaus
 ```
 
-## 2. 环境配置
-
-复制环境变量模板：
+## 2. 启动后端依赖和 API
 
 ```bash
-cp backend/.env.example backend/.env
+docker compose up -d --build
 ```
 
-编辑 `backend/.env`，配置裸跑 Go API 时需要的环境变量：
+这会启动：
+
+- PostgreSQL: `localhost:5432`
+- Redis: `localhost:6379`
+- MinIO: `localhost:9000`
+- MinIO Console: `http://localhost:9001`
+- Mock Image Provider: `http://localhost:8089`
+- Go API: `http://localhost:8080`
+
+Docker Compose 会自动给 API 注入本地 demo Provider：
 
 ```bash
-# Go API 配置
-LABHAUS_SERVER_PORT=8080
-LABHAUS_JWT_SECRET_KEY=your-secret-key-change-in-production
-
-# 图像 Provider（裸跑 Go API 时必须显式配置）
-LABHAUS_IMAGE_PROVIDER_BASE_URL=http://localhost:8089
+LABHAUS_IMAGE_PROVIDER_BASE_URL=http://mock-image-provider:8089
 LABHAUS_IMAGE_PROVIDER_API_KEY=dev-mock-key
 ```
 
-Docker Compose 默认会启动本地 `mock-image-provider`，并自动为 API 注入：
+## 3. 导入样式 seed
 
-- `LABHAUS_IMAGE_PROVIDER_BASE_URL=http://mock-image-provider:8089`
-- `LABHAUS_IMAGE_PROVIDER_API_KEY=dev-mock-key`
-
-如果要在 Compose 中改用真实图像 Provider，再通过 shell 或 Compose 可读取的 `.env` 覆盖 `LABHAUS_IMAGE_PROVIDER_BASE_URL` 和 `LABHAUS_IMAGE_PROVIDER_API_KEY`。
-
-## 3. 启动服务
-
-### 方式 A: Docker Compose（推荐）
-
-```bash
-# 先启动 API 依赖服务和本地 mock image provider
-docker compose up -d postgres redis minio mock-image-provider
-
-# 导入可重复执行的样式种子数据
-docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
-
-# 启动 API
-docker compose up -d api
-
-# 查看日志
-docker compose logs -f api
-
-# 停止服务
-docker compose down
-```
-
-访问：
-
-- API: http://localhost:8080
-- Web: http://localhost:3000（单独运行 `apps/web`）
-- PostgreSQL: localhost:5432
-- Redis: localhost:6379
-- MinIO: http://localhost:9001
-- Mock Image Provider: http://localhost:8089
-
-如果要在已启动全部服务后补导入样式数据，请在导入后重启 API：
+当前本地 demo seed 包含 12 条样式。后续产品目标是接入 500+ 样式库，但当前仓库内 seed 不是完整样式库。
 
 ```bash
 docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
 docker compose restart api
 ```
 
-原因：当前 API 会在启动时加载样式快照用于推荐。
+需要重启 API 的原因：样式推荐器在 API 启动时加载样式快照。
 
-### 方式 B: 本地开发模式
+## 4. 启动前端
 
 ```bash
-# 安装依赖
 pnpm install
-
-# 启动基础设施和本地 mock image provider
-docker compose up -d postgres redis minio mock-image-provider
-
-# 导入样式种子数据
-docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
-
-# 启动 Go API
-cd backend
-go run cmd/api/main.go
-
-# 启动前端
-cd ../apps/web
-pnpm dev
+cp apps/web/.env.example apps/web/.env.local
+pnpm --filter @labhaus/web dev
 ```
 
-## 4. 验证安装
+`apps/web/.env.local` 当前只需要：
+
+```bash
+BACKEND_URL=http://localhost:8080
+```
+
+访问 http://localhost:3000。
+
+## 5. 用 Web 跑 MVP
+
+1. 进入 `/auth` 注册或登录。
+2. 登录成功后 Token 会保存在浏览器 `localStorage`。
+3. 进入 `/styles/recommend` 输入创意描述，例如 `modern UI dashboard for a SaaS product`。
+4. 复制推荐样式中的 prompt 或直接参考其风格。
+5. 进入 `/images/generate`，每行输入一个 prompt。
+6. 点击生成，等待图片列表返回。
+7. 点击下载，打开 MinIO 预签名 URL。
+
+## 6. 用脚本验证 MVP
+
+```bash
+scripts/mvp-smoke.sh
+```
+
+脚本会：
+
+1. 检查 `/api/health`。
+2. 注册 demo 用户（已存在时允许继续）。
+3. 登录并获取 token。
+4. 调用 `/api/styles/recommend`。
+5. 调用 `/api/images/generate`。
+6. 检查推荐结果和生成图片结果非空。
+
+可覆盖默认变量：
+
+```bash
+API_URL=http://localhost:8080 \
+EMAIL=demo@example.com \
+PASSWORD=SecurePassword123! \
+NAME="Demo User" \
+scripts/mvp-smoke.sh
+```
+
+## 7. 常用 API 手动验证
 
 ### 健康检查
 
@@ -108,7 +111,7 @@ pnpm dev
 curl http://localhost:8080/api/health
 ```
 
-预期响应：
+预期：
 
 ```json
 {
@@ -117,17 +120,7 @@ curl http://localhost:8080/api/health
 }
 ```
 
-### 一键 MVP Smoke
-
-完成样式 seed 并启动 API 后，可以运行：
-
-```bash
-scripts/mvp-smoke.sh
-```
-
-脚本会检查健康状态、注册/登录演示用户、请求样式推荐，并通过本地 mock image provider 执行批量生图。
-
-### 注册并登录
+### 注册和登录
 
 ```bash
 curl -X POST http://localhost:8080/api/users/register \
@@ -146,96 +139,80 @@ TOKEN=$(curl -s -X POST http://localhost:8080/api/users/login \
   }' | jq -r .token)
 ```
 
-### 测试样式库 API
+### 样式推荐
 
 ```bash
-# 获取样式列表
-curl "http://localhost:8080/api/styles?limit=5" \
-  -H "Authorization: Bearer $TOKEN"
-
-# 样式推荐
 curl -X POST http://localhost:8080/api/styles/recommend \
-  -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
-  -d '{"query": "modern UI design", "limit": 5}'
+  -H "Content-Type: application/json" \
+  -d '{"query": "modern UI dashboard", "limit": 5}'
 ```
 
-## 5. 用户注册和认证
-
-### 注册账号
-
-前端访问 `http://localhost:3000/auth`，登录或注册后会保存 Bearer Token。样式推荐和批量生图页面会自动附带 Authorization。
-
-### 使用认证
+### 批量生图
 
 ```bash
-# 使用 token 访问受保护的端点
-curl http://localhost:8080/api/users/me \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+curl -X POST http://localhost:8080/api/images/generate \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompts": ["modern dashboard hero", "minimal product card"],
+    "width": 512,
+    "height": 512,
+    "quality": "standard"
+  }'
 ```
 
-## 6. 运行测试
+## 8. 运行测试
 
 ```bash
-# 前端代理/契约测试
+# 前端 helper 测试
 pnpm --filter @labhaus/web test
 
 # 前端类型检查
 pnpm --filter @labhaus/web typecheck
 
-# 全部当前 Node workspace 测试
-pnpm test
+# Go 测试（需要 Go 1.25+）
+cd backend
+go test ./...
 ```
-
-## 7. 下一步
-
-- 📖 阅读 [本地开发指南](local-development.md) 了解开发流程
-- 🏗️ 查看 [后端文档](../../backend/README.md)
-- 🔐 查看 Go 后端用户接口：`/api/users/register`、`/api/users/login`、`/api/users/me`
-- 📦 查看 [部署指南](../DEPLOYMENT.md)
 
 ## 常见问题
 
-### Q: Docker 容器启动失败
+### 样式推荐为空
 
-**A**: 检查端口占用：
-
-```bash
-# 检查 8080 端口
-lsof -i :8080
-
-# 检查 5432 端口（PostgreSQL）
-lsof -i :5432
-```
-
-### Q: 数据库连接失败
-
-**A**: 确保 PostgreSQL 容器正在运行：
-
-```bash
-docker compose ps postgres
-docker compose logs postgres
-```
-
-### Q: 样式库数据为空
-
-**A**: 导入种子数据后重启 API，让启动时的推荐器重新加载样式快照：
+确认已导入 seed 并重启 API：
 
 ```bash
 docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
 docker compose restart api
 ```
 
-### Q: pnpm 安装依赖慢
+### 生图失败
 
-**A**: 配置国内镜像：
+检查 mock provider 和 API 日志：
 
 ```bash
-pnpm config set registry https://registry.npmmirror.com
+docker compose ps mock-image-provider api
+docker compose logs mock-image-provider api
 ```
 
-## 获取帮助
+### Web 请求返回 401
 
-- 📋 [GitHub Issues](https://github.com/sine-io/labhaus/issues)
-- 💬 [Discussions](https://github.com/sine-io/labhaus/discussions)
-- 📧 Email: support@labhaus.io
+进入 `/auth` 重新登录，或清除 Token 后再登录。
+
+### 端口被占用
+
+检查常用端口：
+
+```bash
+lsof -i :3000
+lsof -i :8080
+lsof -i :5432
+lsof -i :9000
+```
+
+## 下一步
+
+- 本地开发：`docs/guides/local-development.md`
+- API 契约：`docs/architecture/api-design.md`
+- 部署：`docs/DEPLOYMENT.md`

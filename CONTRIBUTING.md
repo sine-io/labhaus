@@ -1,145 +1,141 @@
 # 贡献指南
 
-感谢你对 Labhaus 项目的关注！
+感谢你对 Labhaus 的关注。
 
-## 贡献方式
+## 当前主线
 
-- 🐛 报告 Bug
-- 💡 提出功能建议
-- 📝 改进文档
-- 🛠️ 提交代码
+- 后端：`backend/` Go API
+- 前端：`apps/web/` Next.js
+- 本地依赖：PostgreSQL、Redis、MinIO、mock image provider
 
-## 开发流程
+当前 MVP 是“认证后的样式推荐 + 批量生图”。视频工作流、可视化编辑器和模板市场是后续阶段。
 
-### 1. Fork 和克隆
+## 开发环境
 
 ```bash
-# Fork 项目后克隆你的 fork
-git clone https://github.com/YOUR_USERNAME/labhaus.git
+git clone https://github.com/sine-io/labhaus.git
 cd labhaus
-
-# 添加上游仓库
-git remote add upstream https://github.com/sine-io/labhaus.git
+pnpm install
+cp apps/web/.env.example apps/web/.env.local
+cp backend/.env.example backend/.env
+docker compose up -d --build
+docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
+docker compose restart api
 ```
 
-### 2. 创建分支
+启动前端：
 
 ```bash
-# 更新 main 分支
-git checkout main
-git pull upstream main
+pnpm --filter @labhaus/web dev
+```
 
-# 创建功能分支
+裸跑后端：
+
+```bash
+cd backend
+go run cmd/api/main.go
+```
+
+## 分支和提交
+
+```bash
+git checkout main
+git pull
 git checkout -b feature/your-feature-name
 ```
 
-### 3. 开发
+提交信息遵循 Conventional Commits：
 
-参考 [本地开发指南](docs/guides/local-development.md) 搭建环境
-
-```bash
-pnpm install
-docker compose up -d
-pnpm dev
+```text
+feat: add style recommendation runtime adapter
+fix: forward authorization in web proxy
+docs: update API contract
+test: cover image generation response normalization
+chore: update tooling
 ```
 
-### 4. 提交
+常用类型：
 
-```bash
-# 暂存修改
-git add .
-
-# 提交（使用清晰的 commit message）
-git commit -m "feat: add new feature"
-
-# 推送到你的 fork
-git push origin feature/your-feature-name
-```
-
-### 5. 提交 Pull Request
-
-1. 前往 https://github.com/sine-io/labhaus/pulls
-2. 点击 "New Pull Request"
-3. 选择你的分支
-4. 填写 PR 描述
-5. 等待 Review
-
-## Commit Message 规范
-
-遵循 [Conventional Commits](https://www.conventionalcommits.org/)：
-
-```
-<type>: <description>
-
-[optional body]
-
-[optional footer]
-```
-
-### Type 类型
-
-- `feat`: 新功能
-- `fix`: Bug 修复
-- `docs`: 文档更新
-- `style`: 代码格式（不影响功能）
-- `refactor`: 重构
-- `test`: 测试相关
-- `chore`: 构建/工具配置
-
-### 示例
-
-```
-feat: add style library API
-
-- Implement GET /api/styles endpoint
-- Add pagination and filtering
-- Write unit tests
-
-Closes #10
-```
-
-## Code Review
-
-所有 PR 需要至少 1 人 Review 后才能合并。
-
-Review 重点：
-- ✅ 代码质量和可读性
-- ✅ 测试覆盖
-- ✅ 文档完整性
-- ✅ 性能影响
+- `feat`
+- `fix`
+- `docs`
+- `test`
+- `refactor`
+- `chore`
 
 ## 测试要求
 
-- 新功能必须包含单元测试
-- 测试覆盖率不低于 80%
-- 所有测试必须通过
+提交前根据修改范围运行：
 
 ```bash
-# 运行测试
-pnpm test
+# 前端 helper 测试
+pnpm --filter @labhaus/web test
 
-# 查看覆盖率
-pnpm test:coverage
+# 前端类型检查
+pnpm --filter @labhaus/web typecheck
+
+# 前端 lint
+pnpm --filter @labhaus/web lint
+
+# 全 workspace
+pnpm lint
+pnpm test
+pnpm build
+
+# Go 后端
+cd backend
+go test ./...
+go build ./...
 ```
+
+本地 demo 验证：
+
+```bash
+scripts/mvp-smoke.sh
+```
+
+部分 Go 测试需要 PostgreSQL 或 MinIO 正在运行。
+
+## 文档要求
+
+如果修改 API、启动方式、配置、产品范围或目录结构，请同步更新：
+
+- `README.md`
+- `docs/architecture/api-design.md`
+- `docs/guides/quick-start.md`
+- `docs/guides/local-development.md`
+- `docs/DEPLOYMENT.md`
+- 相关产品或架构文档
+
+当前仓库不保留历史执行报告类文档；过期内容请删除，不要继续引用旧 TypeScript API 或旧目录。
+
+## Pull Request
+
+PR 描述建议包含：
+
+- 变更目的
+- 主要文件
+- 验证命令和结果
+- 需要 reviewer 重点看的部分
+
+Review 重点：
+
+- 代码是否符合当前 Go + Next 主线
+- API 契约是否清晰
+- 鉴权、配置和错误处理是否合理
+- 测试和文档是否同步
 
 ## 问题反馈
 
-报告 Bug 或提出建议，请访问：
-https://github.com/sine-io/labhaus/issues
+提交 issue 时请提供：
 
-提供以下信息：
 - 问题描述
 - 复现步骤
 - 期望行为
 - 实际行为
-- 环境信息（OS、Node 版本等）
-
-## 行为准则
-
-- 保持友善和尊重
-- 欢迎建设性的讨论
-- 尊重维护者的决定
+- 环境信息（OS、Node、pnpm、Go、Docker 版本）
+- 相关日志或截图
 
 ## 许可证
 
-贡献的代码将采用 [AGPL-3.0](LICENSE) 许可证。
+贡献的代码和文档将采用 [GNU Affero General Public License v3.0](LICENSE)。

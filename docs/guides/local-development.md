@@ -1,160 +1,169 @@
-# 开发指南
+# 本地开发指南
 
-当前主线是 Go 后端 `backend/` + Next 前端 `apps/web/`。早期 TypeScript API 和共享包遗留代码已删除，如需参考旧实现请从 git history 查看。
+当前主线：
+
+- Go API：`backend/`
+- Next.js 前端：`apps/web/`
+- 本地依赖：PostgreSQL、Redis、MinIO、mock image provider
 
 ## 环境要求
 
-- Node.js >= 20.0.0
-- pnpm >= 9.0.0
-- Docker & Docker Compose
-- Git
+- Node.js >= 20
+- pnpm 11
+- Docker 和 Docker Compose
+- Go 1.25+（开发后端需要）
 
-## 快速开始
-
-### 1. 克隆项目
+## 初始化
 
 ```bash
 git clone https://github.com/sine-io/labhaus.git
 cd labhaus
-```
-
-### 2. 安装依赖
-
-```bash
 pnpm install
-```
-
-### 3. 启动开发环境
-
-```bash
-# 启动 PostgreSQL、Redis、MinIO
-docker compose up -d
-
-# 等待服务就绪
-docker compose ps
-
-# 复制环境变量
-cp backend/.env.example backend/.env
 cp apps/web/.env.example apps/web/.env.local
+cp backend/.env.example backend/.env
 ```
 
-### 4. 开发模式
+`apps/web/.env.local`：
 
 ```bash
-# 启动当前 Node workspace 的开发服务器
-pnpm dev
+BACKEND_URL=http://localhost:8080
+```
 
-# 单独启动前端
+## 启动服务
+
+### 一次性启动本地演示环境
+
+```bash
+docker compose up -d --build
+docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
+docker compose restart api
 pnpm --filter @labhaus/web dev
+```
 
-# 单独启动 Go API
+### 分开启动
+
+只启动依赖服务：
+
+```bash
+docker compose up -d postgres redis minio mock-image-provider
+docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
+```
+
+裸跑 Go API：
+
+```bash
 cd backend
 go run cmd/api/main.go
 ```
 
-## 项目结构
+启动前端：
 
-```
-labhaus/
-├── apps/                    # 应用
-│   └── web/                 # Next.js 前端
-├── backend/                 # Go API 服务
-├── docs/                    # 文档
-├── .github/                 # GitHub Actions
-├── docker-compose.yml       # Docker 配置
-├── turbo.json               # Turborepo 配置
-├── pnpm-workspace.yaml      # pnpm workspace 配置
-└── package.json             # 根 package.json
+```bash
+pnpm --filter @labhaus/web dev
 ```
 
 ## 常用命令
 
 ```bash
-# 安装依赖
-pnpm install
+# 前端开发
+pnpm --filter @labhaus/web dev
 
-# 开发模式
-pnpm dev
+# 前端测试
+pnpm --filter @labhaus/web test
+pnpm --filter @labhaus/web typecheck
+pnpm --filter @labhaus/web lint
 
-# 构建所有包
-pnpm build
-
-# 代码检查
+# 全 workspace
 pnpm lint
-
-# 格式化代码
-pnpm format
-
-# 运行测试
 pnpm test
+pnpm build
+pnpm format
+pnpm format:check
 
-# 清理构建产物
-pnpm clean
+# 后端
+cd backend
+go test ./...
+go build ./...
+go run cmd/api/main.go
+
+# 本地 smoke
+scripts/mvp-smoke.sh
 ```
 
 ## Docker 服务
 
 ### PostgreSQL
 
-- 端口: 5432
-- 数据库: labhaus
-- 用户名: labhaus
-- 密码: labhaus_dev_password
+- Host: `localhost`
+- Port: `5432`
+- Database: `labhaus`
+- User: `labhaus`
+- Password: `labhaus_dev_password`
 
 ### Redis
 
-- 端口: 6379
+- Host: `localhost`
+- Port: `6379`
 
 ### MinIO
 
-- API 端口: 9000
-- Console 端口: 9001
-- 用户名: minioadmin
-- 密码: minioadmin
+- API: `http://localhost:9000`
+- Console: `http://localhost:9001`
+- User: `minioadmin`
+- Password: `minioadmin`
 
-访问 MinIO Console: http://localhost:9001
+### Mock Image Provider
 
-## 开发工作流
+- URL: `http://localhost:8089`
+- Health: `GET /health`
+- Generate: `POST /v1/generate`
+- API key: `dev-mock-key`
 
-1. 从 `main` 分支创建功能分支
-2. 开发并提交代码
-3. 运行 `pnpm lint` 和 `pnpm test` 确保通过
-4. 提交 Pull Request
-5. 等待 CI 通过和 Code Review
-6. 合并到 `main`
+## 当前开发注意事项
+
+- `backend/seeds/styles.sql` 当前只有 12 条 demo 样式；导入后需要重启 API。
+- `LABHAUS_IMAGE_PROVIDER_BASE_URL` 和 `LABHAUS_IMAGE_PROVIDER_API_KEY` 对裸跑 API 是必填。
+- Web 前端通过 Next.js route handler 代理到 Go API，不直接在浏览器读取 Go API URL。
+- 登录 token 存在浏览器 `localStorage` 的 `labhaus_bearer_token`。
+- Workflow API 现在只管理元数据和状态，不执行完整视频工作流。
 
 ## 代码规范
 
-- 使用 ESLint 进行代码检查
-- 使用 Prettier 进行代码格式化
-- 提交前运行 `pnpm lint` 和 `pnpm format`
-- 遵循 TypeScript 严格模式
+- TypeScript 使用严格模式。
+- 前端使用 ESLint 和 Prettier。
+- Go 代码使用 `gofmt`。
+- 新功能需要补测试；文档变更需要同步 quick-start / API / README 中相关内容。
 
 ## 故障排查
 
-### Docker 权限问题
-
-如果遇到 "permission denied" 错误：
+### 样式推荐结果为空
 
 ```bash
-# 将当前用户添加到 docker 组
-sudo usermod -aG docker $USER
+docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
+docker compose restart api
+```
 
-# 重新登录或运行
-newgrp docker
+### API 启动失败，提示 Provider 配置缺失
+
+裸跑 API 时确认已设置：
+
+```bash
+export LABHAUS_IMAGE_PROVIDER_BASE_URL=http://localhost:8089
+export LABHAUS_IMAGE_PROVIDER_API_KEY=dev-mock-key
+```
+
+### Go 测试缺依赖服务
+
+存储和集成测试可能需要 PostgreSQL / MinIO 正在运行。先运行：
+
+```bash
+docker compose up -d postgres minio
 ```
 
 ### pnpm 安装失败
 
 ```bash
-# 清理缓存
 pnpm store prune
-
-# 删除 node_modules 重新安装
-rm -rf node_modules
+rm -rf node_modules apps/web/node_modules
 pnpm install
 ```
-
-## 贡献
-
-参考 [CONTRIBUTING.md](CONTRIBUTING.md)

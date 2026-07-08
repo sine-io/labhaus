@@ -1,410 +1,462 @@
-# Labhaus API 设计文档
+# Labhaus API 设计
 
-> **当前状态**：本文描述早期 TypeScript API（`/api/auth/*`，端口 3001）契约，仅作为历史参考保留；对应源码已在遗留清理中删除。当前主线 Go 后端使用 `/api/users/*`、`/api/styles/*`、`/api/images/*`，端口 8080；以 `backend/README.md` 和运行时代码为准。
-
-## API 基础
-
-**Base URL**: `http://localhost:3001/api`  
-**协议**: REST + JSON  
-**认证**: JWT Bearer Token
+**Base URL**：`http://localhost:8080/api`
+**当前实现**：Go Gin API
+**最后更新**：2026-07-08
 
 ## 通用规范
 
 ### 请求头
 
-```
+```http
 Content-Type: application/json
-Authorization: Bearer <access_token>  # 需要认证的端点
+Authorization: Bearer <token>
 ```
 
-### 响应格式
+`Authorization` 只在受保护接口中需要。
 
-**成功响应** (2xx):
+### 错误响应
+
+当前 Go API 使用简单错误格式：
 
 ```json
 {
-  "data": { ... },
-  "pagination": {    // 列表接口才有
-    "page": 1,
-    "limit": 20,
-    "total": 100,
-    "totalPages": 5
+  "error": "human readable error"
+}
+```
+
+### 鉴权
+
+- 注册和登录是公开接口。
+- `/api/users/me`、`/api/styles/*`、`/api/workflows/*`、`/api/images/*` 均需要 Bearer Token。
+- 登录返回单个 JWT：`{ "token": "...", "user": {...} }`。
+- 当前没有 refresh token、OAuth、RBAC 和配额。
+
+## Health
+
+### GET `/health`
+
+响应：
+
+```json
+{
+  "status": "healthy",
+  "version": "0.1.0"
+}
+```
+
+## Users
+
+### POST `/users/register`
+
+公开接口。
+
+请求：
+
+```json
+{
+  "email": "demo@labhaus.io",
+  "password": "SecurePassword123!",
+  "name": "Demo User"
+}
+```
+
+约束：
+
+- `email` 必填且必须为邮箱格式。
+- `password` 必填，最少 8 字符。
+- `name` 必填。
+
+成功响应：`201 Created`
+
+```json
+{
+  "id": "uuid",
+  "email": "demo@labhaus.io",
+  "name": "Demo User",
+  "role": "user",
+  "created_at": "2026-07-08T00:00:00Z",
+  "updated_at": "2026-07-08T00:00:00Z"
+}
+```
+
+重复邮箱：`409 Conflict`
+
+```json
+{
+  "error": "email already exists"
+}
+```
+
+### POST `/users/login`
+
+公开接口。
+
+请求：
+
+```json
+{
+  "email": "demo@labhaus.io",
+  "password": "SecurePassword123!"
+}
+```
+
+成功响应：`200 OK`
+
+```json
+{
+  "token": "jwt-token",
+  "user": {
+    "id": "uuid",
+    "email": "demo@labhaus.io",
+    "name": "Demo User",
+    "role": "user",
+    "created_at": "2026-07-08T00:00:00Z",
+    "updated_at": "2026-07-08T00:00:00Z"
   }
 }
 ```
 
-**错误响应** (4xx/5xx):
+### GET `/users/me`
+
+需要 Bearer Token。
+
+成功响应：`200 OK`
 
 ```json
 {
-  "error": "ERROR_CODE",
-  "message": "Human-readable error message",
-  "details": { ... }  // 可选，仅验证错误
+  "id": "uuid",
+  "email": "demo@labhaus.io",
+  "name": "Demo User",
+  "role": "user",
+  "created_at": "2026-07-08T00:00:00Z",
+  "updated_at": "2026-07-08T00:00:00Z"
 }
 ```
 
-### 错误码
+### PATCH `/users/me`
 
-| 状态码 | 错误码              | 说明                   |
-| ------ | ------------------- | ---------------------- |
-| 400    | BAD_REQUEST         | 请求参数错误           |
-| 400    | VALIDATION_ERROR    | 数据验证失败           |
-| 401    | UNAUTHORIZED        | 未认证或 token 无效    |
-| 403    | FORBIDDEN           | 无权访问               |
-| 404    | NOT_FOUND           | 资源不存在             |
-| 409    | CONFLICT            | 资源冲突（如重复注册） |
-| 429    | RATE_LIMIT_EXCEEDED | 超过速率限制           |
-| 500    | INTERNAL_ERROR      | 服务器内部错误         |
+需要 Bearer Token。
 
-## 端点列表
-
-### 1. 健康检查
-
-#### GET /api/health
-
-**描述**: 服务健康检查
-
-**响应**:
+请求：
 
 ```json
 {
-  "status": "ok",
-  "timestamp": "2026-06-19T12:00:00Z"
+  "email": "new-email@labhaus.io",
+  "name": "New Name"
 }
 ```
 
-### 2. API 信息
+成功响应：更新后的 user DTO。
 
-#### GET /api
+## Styles
 
-**描述**: 获取 API 版本和端点列表
+所有 styles 接口均需要 Bearer Token。
 
-**响应**:
+### GET `/styles`
 
-```json
-{
-  "name": "Labhaus API",
-  "version": "0.1.0",
-  "endpoints": {
-    "health": "/api/health",
-    "styles": "/api/styles",
-    "auth": "/api/auth"
-  }
-}
-```
+查询参数：
 
----
+| 参数       | 类型         | 说明                                             |
+| ---------- | ------------ | ------------------------------------------------ |
+| `category` | string       | 按分类过滤                                       |
+| `tags`     | string array | 按 tags 过滤，当前 repository 使用 LIKE contains |
+| `limit`    | integer      | 默认 20                                          |
+| `offset`   | integer      | 默认 0                                           |
 
-## 样式库 API
-
-### 1. 获取样式列表
-
-#### GET /api/styles
-
-**描述**: 查询样式库，支持筛选、搜索和分页
-
-**查询参数**:
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| category | string | 否 | 按分类筛选 |
-| style | string | 否 | 按风格筛选 |
-| scene | string | 否 | 按场景筛选 |
-| featured | boolean | 否 | 是否精选 |
-| search | string | 否 | 全文搜索关键词 |
-| page | integer | 否 | 页码（默认 1）|
-| limit | integer | 否 | 每页数量（默认 20，最大 100）|
-
-**示例**:
-
-```bash
-GET /api/styles?category=UI%20%26%20Interfaces&limit=10
-GET /api/styles?search=portrait&page=2
-```
-
-**响应**:
+成功响应：
 
 ```json
 {
   "styles": [
     {
-      "id": "uuid",
-      "case_id": 505,
-      "title": "夜间手机光沙发肖像",
-      "prompt": "A young adult woman...",
-      "prompt_preview": "A young adult woman...",
-      "category": "Photography & Realism",
-      "styles": ["Realistic"],
-      "scenes": ["Tech", "Commerce"],
-      "image_url": "/images/case505.jpg",
-      "featured": false,
-      "created_at": "2026-06-19T...",
-      "updated_at": "2026-06-19T..."
+      "id": "style-id",
+      "name": "Minimal UI Dashboard",
+      "description": "Clean modern dashboard style.",
+      "prompt": "modern minimal UI dashboard...",
+      "category": "ui",
+      "tags": ["ui", "dashboard"],
+      "created_at": "2026-07-08T00:00:00Z",
+      "updated_at": "2026-07-08T00:00:00Z"
     }
   ],
-  "pagination": {
-    "page": 1,
-    "limit": 10,
-    "total": 503,
-    "totalPages": 51
+  "total": 1,
+  "limit": 20,
+  "offset": 0
+}
+```
+
+### GET `/styles/:id`
+
+成功响应：style DTO。
+
+不存在：`404`
+
+```json
+{
+  "error": "style not found"
+}
+```
+
+### POST `/styles`
+
+请求：
+
+```json
+{
+  "name": "Cinematic Product",
+  "description": "Premium product campaign style",
+  "prompt": "cinematic product photography...",
+  "category": "product",
+  "tags": ["product", "cinematic"]
+}
+```
+
+约束：
+
+- `name` 必填，最多 100 字符。
+- `description` 最多 500 字符。
+- `prompt` 必填，最多 2000 字符。
+
+成功响应：`201 Created`，返回 style DTO。
+
+### POST `/styles/recommend`
+
+请求：
+
+```json
+{
+  "query": "modern UI dashboard for SaaS",
+  "limit": 5
+}
+```
+
+约束：
+
+- `query` 必填，1-500 字符。
+- `limit` 可选，1-50；默认 10。
+
+成功响应：
+
+```json
+{
+  "query": "modern UI dashboard for SaaS",
+  "recommendations": [
+    {
+      "id": "style-id",
+      "name": "Minimal UI Dashboard",
+      "prompt": "modern minimal UI dashboard...",
+      "category": "ui",
+      "description": "Clean modern dashboard style.",
+      "tags": ["ui", "dashboard", "saas"],
+      "score": 0.75
+    }
+  ],
+  "total": 1
+}
+```
+
+实现说明：
+
+- 当前 HTTP 运行时使用 handler 内的关键词重叠打分。
+- `internal/domain/style/recommendation` 中已有 TF-IDF + Cosine 实现，后续应接入运行时。
+
+## Workflows
+
+所有 workflow 接口均需要 Bearer Token。
+
+当前 Workflow API 管理元数据和状态，不执行完整视频工作流。
+
+### POST `/workflows`
+
+请求：
+
+```json
+{
+  "style_id": "style-id",
+  "config": {
+    "image_count": 4,
+    "width": 1024,
+    "height": 1024,
+    "steps": 30,
+    "seed": 12345
   }
 }
 ```
 
-### 2. 获取样式详情
+约束：
 
-#### GET /api/styles/:id
+- `style_id` 必填。
+- `config.image_count` 必填，1-10。
+- `config.width` 和 `config.height` 必填且大于 0。
+- `config.steps` 可选，1-100。
 
-**描述**: 根据 ID 获取单个样式详情
-
-**路径参数**:
-
-- `id` (uuid): 样式 ID
-
-**示例**:
-
-```bash
-GET /api/styles/550e8400-e29b-41d4-a716-446655440000
-```
-
-**响应**:
+成功响应：`201 Created`
 
 ```json
 {
-  "id": "uuid",
-  "case_id": 505,
-  "title": "...",
-  "prompt": "...",
-  ...
-}
-```
-
-### 3. 样式推荐
-
-#### POST /api/styles/recommend
-
-**描述**: 基于查询文本推荐相关样式（TF-IDF + 余弦相似度）
-
-**请求体**:
-
-```json
-{
-  "query": "modern minimalist UI design",
-  "limit": 10
-}
-```
-
-**响应**:
-
-```json
-{
-  "query": "modern minimalist UI design",
-  "recommendations": [
-    {
-      "style": { ...完整样式对象... },
-      "score": 0.856
-    }
-  ],
-  "total": 10
-}
-```
-
-### 4. 相似样式
-
-#### GET /api/styles/:id/similar
-
-**描述**: 查找与指定样式相似的其他样式
-
-**查询参数**:
-
-- `limit` (integer): 返回数量（默认 10，最大 50）
-
-**示例**:
-
-```bash
-GET /api/styles/550e8400-e29b-41d4-a716-446655440000/similar?limit=5
-```
-
-**响应**:
-
-```json
-{
-  "style_id": "uuid",
-  "recommendations": [
-    {
-      "style": { ... },
-      "score": 0.742
-    }
-  ],
-  "total": 5
-}
-```
-
----
-
-## 认证 API
-
-### 1. 用户注册
-
-#### POST /api/auth/register
-
-**描述**: 注册新用户账号
-
-**请求体**:
-
-```json
-{
-  "email": "user@example.com",
-  "password": "SecurePassword123!",
-  "name": "John Doe" // 可选
-}
-```
-
-**响应** (201):
-
-```json
-{
-  "user": {
-    "id": "uuid",
-    "email": "user@example.com",
-    "name": "John Doe",
-    "email_verified": false,
-    "created_at": "2026-06-19T..."
+  "id": "workflow-id",
+  "user_id": "user-id",
+  "style_id": "style-id",
+  "state": "DRAFT",
+  "config": {
+    "image_count": 4,
+    "width": 1024,
+    "height": 1024,
+    "steps": 30,
+    "seed": 12345
   },
-  "tokens": {
-    "access_token": "eyJhbGc...",
-    "refresh_token": "eyJhbGc...",
-    "token_type": "Bearer",
-    "expires_in": 3600
-  }
+  "created_at": "2026-07-08T00:00:00Z",
+  "updated_at": "2026-07-08T00:00:00Z"
 }
 ```
 
-### 2. 用户登录
+### GET `/workflows`
 
-#### POST /api/auth/login
+查询参数：
 
-**描述**: 使用邮箱和密码登录
+| 参数     | 类型    | 说明         |
+| -------- | ------- | ------------ |
+| `state`  | string  | 可选状态过滤 |
+| `limit`  | integer | 默认 20      |
+| `offset` | integer | 默认 0       |
 
-**请求体**:
+成功响应：
 
 ```json
 {
-  "email": "user@example.com",
-  "password": "SecurePassword123!"
+  "workflows": [],
+  "total": 0,
+  "limit": 20,
+  "offset": 0
 }
 ```
 
-**响应** (200):
+只返回当前用户自己的 workflow。
+
+### GET `/workflows/:id`
+
+需要 workflow 属于当前用户，否则返回 `403`。
+
+### PATCH `/workflows/:id/status`
+
+请求：
 
 ```json
 {
-  "user": { ... },
-  "tokens": { ... }
+  "state": "PENDING"
 }
 ```
 
-### 3. 刷新 Token
+支持状态：
 
-#### POST /api/auth/refresh
+- `DRAFT`
+- `PENDING`
+- `RUNNING`
+- `PAUSED`
+- `COMPLETED`
+- `FAILED`
+- `CANCELLED`
 
-**描述**: 使用 refresh token 获取新的 access token
+当前领域状态机允许：
 
-**请求体**:
+```text
+DRAFT -> PENDING | CANCELLED
+PENDING -> RUNNING | CANCELLED
+RUNNING -> PAUSED | COMPLETED | FAILED
+PAUSED -> RUNNING | CANCELLED
+COMPLETED -> terminal
+FAILED -> terminal
+CANCELLED -> terminal
+```
+
+非法状态或非法流转返回 `400`。
+
+## Images
+
+所有 image 接口均需要 Bearer Token。
+
+### POST `/images/generate`
+
+请求：
 
 ```json
 {
-  "refresh_token": "eyJhbGc..."
+  "prompts": ["modern dashboard hero", "minimal product card"],
+  "width": 512,
+  "height": 512,
+  "quality": "standard",
+  "style": "optional style prompt"
 }
 ```
 
-**响应** (200):
+约束：
+
+- `prompts` 必填且不能为空。
+- `width` 和 `height` 必填，范围 256-2048。
+- `quality` 必须为 `standard` 或 `hd`。
+- `style` 可选。
+
+成功响应：
 
 ```json
 {
-  "tokens": {
-    "access_token": "eyJhbGc...",
-    "refresh_token": "eyJhbGc...",
-    "token_type": "Bearer",
-    "expires_in": 3600
-  }
+  "results": [
+    {
+      "id": "uuid.png",
+      "url": "http://localhost:9000/images/...",
+      "prompt": "modern dashboard hero",
+      "created_at": "2026-07-08T00:00:00Z"
+    }
+  ],
+  "total": 2,
+  "success": 1,
+  "failed": 1
 }
 ```
 
-### 4. 获取当前用户
+说明：
 
-#### GET /api/auth/me
+- 后端对每条 prompt 调用图像 Provider。
+- Provider 返回 `image_url` 后，后端下载图片并上传 MinIO `images` bucket。
+- `url` 是 24 小时预签名 URL。
+- 如果部分 prompt 失败但至少有成功结果，接口仍返回 `200` 并通过 `failed` 计数体现。
 
-**描述**: 获取当前认证用户信息
+### GET `/images/:id`
 
-**Headers**:
-
-```
-Authorization: Bearer <access_token>
-```
-
-**响应** (200):
+检查图片是否存在，并返回新的预签名 URL：
 
 ```json
 {
-  "user": {
-    "id": "uuid",
-    "email": "user@example.com",
-    "name": "John Doe",
-    "avatar_url": null,
-    "email_verified": false,
-    "created_at": "2026-06-19T..."
-  }
+  "id": "uuid.png",
+  "url": "http://localhost:9000/images/..."
 }
 ```
 
----
+### GET `/images/:id/progress`
 
-## 速率限制
+当前为同步完成占位响应：
 
-| 环境     | 限制                 |
-| -------- | -------------------- |
-| 开发环境 | 无限制               |
-| 生产环境 | 100 请求/分钟 per IP |
-
-**速率限制响应头**:
-
-```
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1624291200
+```json
+{
+  "id": "uuid.png",
+  "status": "completed",
+  "progress": 100
+}
 ```
 
----
+## Next.js 代理兼容
 
-## 完整示例
+`apps/web` 提供以下代理：
 
-### 完整认证流程
+- `POST /api/users/register`
+- `POST /api/users/login`
+- `POST /api/styles/recommend`
+- `POST /api/images/generate`
 
-```bash
-# 1. 注册账号
-curl -X POST http://localhost:3001/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"demo@labhaus.io","password":"Demo123!","name":"Demo"}'
+代理行为：
 
-# 2. 保存返回的 access_token
-
-# 3. 使用 token 查询样式
-curl http://localhost:3001/api/styles?limit=5 \
-  -H "Authorization: Bearer eyJhbGc..."
-
-# 4. 样式推荐
-curl -X POST http://localhost:3001/api/styles/recommend \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer eyJhbGc..." \
-  -d '{"query":"modern UI design","limit":10}'
-
-# 5. Token 过期后刷新
-curl -X POST http://localhost:3001/api/auth/refresh \
-  -H "Content-Type: application/json" \
-  -d '{"refresh_token":"eyJhbGc..."}'
-```
-
-## 更多文档
-
-- [当前 Go 后端文档](../../backend/README.md)
-- [部署指南](../DEPLOYMENT.md)
+- 使用 `BACKEND_URL` 指向 Go API。
+- 转发浏览器请求里的 `Authorization`。
+- `images/generate` 会把 Go API 的 `results` 同步暴露为 `images`，兼容前端页面。
+- `styles/recommend` 会兼容旧字段 `prompt`/`top_k`，转换为 `query`/`limit`。

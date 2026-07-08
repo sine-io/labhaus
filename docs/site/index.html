@@ -1,271 +1,315 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Labhaus - AI Agent Lab Workspace | 为 AI 代理团队设计的实验室工作空间">
-    <meta property="og:title" content="Labhaus - AI Agent Lab Workspace">
-    <meta property="og:description" content="Experiment. Automate. Scale. 为 AI 代理团队提供结构化、可追溯的协作环境。">
-    <meta property="og:image" content="https://raw.githubusercontent.com/sine-io/labhaus/master/.github/brand/social-card.png">
-    <title>Labhaus - AI Agent Lab Workspace</title>
-    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/sine-io/labhaus/master/.github/brand/favicon.ico">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Labhaus - 可视化 AI 内容生产平台，当前 MVP 支持认证后的样式推荐和批量生图，后续扩展到 AI 视频工作流。"
+    />
+    <meta property="og:title" content="Labhaus - AI 内容生产工作流实验室" />
+    <meta property="og:description" content="Experiment. Automate. Scale. 实验一次，复制千次。" />
+    <meta
+      property="og:image"
+      content="https://raw.githubusercontent.com/sine-io/labhaus/main/.github/brand/social-card.png"
+    />
+    <title>Labhaus - AI 内容生产工作流实验室</title>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://raw.githubusercontent.com/sine-io/labhaus/main/.github/brand/favicon.ico"
+    />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        min-height: 100vh;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+        color: #eef5ff;
+        background:
+          radial-gradient(circle at 12% 8%, rgba(47, 211, 255, 0.18), transparent 28rem),
+          radial-gradient(circle at 88% 0%, rgba(255, 73, 167, 0.16), transparent 30rem),
+          linear-gradient(180deg, #060914 0%, #0b1020 48%, #080b14 100%);
+      }
+
+      .container {
+        width: min(1120px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 56px 0;
+      }
+
+      header {
+        text-align: center;
+        padding: 48px 0 56px;
+      }
+
+      .logo {
+        display: inline-flex;
+        width: 112px;
+        height: 112px;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 28px;
+        background: rgba(9, 15, 32, 0.68);
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+        backdrop-filter: blur(18px);
+      }
+
+      .logo img {
+        width: 76px;
+        height: 76px;
+        object-fit: contain;
+      }
+
+      .badge {
+        display: inline-flex;
+        margin-bottom: 20px;
+        padding: 8px 14px;
+        border: 1px solid rgba(80, 231, 255, 0.42);
+        border-radius: 999px;
+        color: #9eefff;
+        background: rgba(80, 231, 255, 0.08);
+        font-size: 14px;
+        font-weight: 800;
+      }
+
+      h1 {
+        margin-bottom: 16px;
+        font-size: clamp(44px, 8vw, 84px);
+        line-height: 0.95;
+        letter-spacing: -0.06em;
+      }
+
+      .tagline {
+        margin-bottom: 12px;
+        color: #50e7ff;
+        font-size: clamp(22px, 4vw, 36px);
+        font-weight: 900;
+      }
+
+      .subtitle {
+        max-width: 760px;
+        margin: 0 auto 34px;
+        color: #b7c7df;
+        font-size: 18px;
+        line-height: 1.8;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        justify-content: center;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        padding: 0 22px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 14px;
+        color: #eef5ff;
+        background: rgba(9, 15, 32, 0.68);
+        text-decoration: none;
+        font-weight: 900;
+        transition:
+          transform 160ms ease,
+          border-color 160ms ease,
+          background 160ms ease;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        border-color: rgba(80, 231, 255, 0.72);
+        background: rgba(80, 231, 255, 0.12);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+        margin-top: 28px;
+      }
+
+      .card {
+        min-height: 220px;
+        padding: 26px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 24px;
+        background: rgba(9, 15, 32, 0.68);
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+        backdrop-filter: blur(18px);
+      }
+
+      .icon {
+        margin-bottom: 18px;
+        font-size: 34px;
+      }
+
+      .card h2 {
+        margin-bottom: 12px;
+        color: #eef5ff;
+        font-size: 22px;
+      }
+
+      .card p {
+        color: #b7c7df;
+        line-height: 1.75;
+      }
+
+      .roadmap {
+        margin-top: 18px;
+      }
+
+      .roadmap li {
+        margin-left: 20px;
+        color: #b7c7df;
+        line-height: 1.8;
+      }
+
+      footer {
+        padding: 42px 0 0;
+        color: #9aaac0;
+        text-align: center;
+      }
+
+      footer a {
+        color: #9eefff;
+        text-decoration: none;
+      }
+
+      footer a:hover {
+        text-decoration: underline;
+      }
+
+      @media (max-width: 820px) {
+        .grid {
+          grid-template-columns: 1fr;
         }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
-            line-height: 1.6;
-            color: #1E293B;
-            background: linear-gradient(135deg, #0EA5E9 0%, #10B981 100%);
-            min-height: 100vh;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-        
-        header {
-            text-align: center;
-            padding: 4rem 0 2rem;
-        }
-        
-        .logo {
-            width: 120px;
-            height: 120px;
-            margin: 0 auto 2rem;
-            background: white;
-            border-radius: 24px;
-            padding: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-        }
-        
-        .logo img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-        
-        h1 {
-            color: white;
-            font-size: 3rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-        }
-        
-        .tagline {
-            color: rgba(255, 255, 255, 0.95);
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-        
-        .subtitle {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 1.2rem;
-            margin-bottom: 3rem;
-        }
-        
-        .cta-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 4rem;
-        }
-        
-        .btn {
-            display: inline-block;
-            padding: 1rem 2rem;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary {
-            background: white;
-            color: #0EA5E9;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.25);
-        }
-        
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-        }
-        
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-        
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-bottom: 4rem;
-        }
-        
-        .feature-card {
-            background: white;
-            padding: 2rem;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-        }
-        
-        .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-        
-        .feature-card h3 {
-            color: #0EA5E9;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-        
-        .feature-card p {
-            color: #64748B;
-            line-height: 1.8;
-        }
-        
-        footer {
-            text-align: center;
-            padding: 2rem 0;
-            color: rgba(255, 255, 255, 0.8);
-        }
-        
-        footer a {
-            color: white;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        
-        footer a:hover {
-            text-decoration: underline;
-        }
-        
-        .status-badge {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            margin-bottom: 2rem;
-            backdrop-filter: blur(10px);
-        }
-        
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem;
-            }
-            
-            .tagline {
-                font-size: 1.2rem;
-            }
-            
-            .subtitle {
-                font-size: 1rem;
-            }
-            
-            .features {
-                grid-template-columns: 1fr;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <header>
-            <div class="logo">
-                <img src="https://raw.githubusercontent.com/sine-io/labhaus/master/.github/brand/logo-128.png" alt="Labhaus Logo">
-            </div>
-            <div class="status-badge">🚧 Early Development</div>
-            <h1>Labhaus</h1>
-            <p class="tagline">Experiment. Automate. Scale.</p>
-            <p class="subtitle">为 AI 代理团队设计的实验室工作空间</p>
-            
-            <div class="cta-buttons">
-                <a href="https://github.com/sine-io/labhaus" class="btn btn-primary" target="_blank">
-                    📦 View on GitHub
-                </a>
-                <a href="https://github.com/sine-io/labhaus#readme" class="btn btn-secondary" target="_blank">
-                    📖 Documentation
-                </a>
-            </div>
-        </header>
-        
-        <main>
-            <section class="features">
-                <div class="feature-card">
-                    <div class="feature-icon">🧪</div>
-                    <h3>实验驱动</h3>
-                    <p>提供结构化的实验环境，让 AI 代理能够安全地探索、测试和验证想法。</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🤖</div>
-                    <h3>多代理协作</h3>
-                    <p>支持多个 AI 代理并行工作，通过清晰的工作流编排实现高效协作。</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3>可追溯性</h3>
-                    <p>完整记录每个实验的过程和结果，确保工作可复现、可审计。</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3>自动化优先</h3>
-                    <p>将重复性工作自动化，让人类专注于创造性决策和系统设计。</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🔧</div>
-                    <h3>灵活扩展</h3>
-                    <p>模块化架构设计，支持自定义工作流和第三方服务集成。</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🎯</div>
-                    <h3>生产就绪</h3>
-                    <p>从实验到生产的完整路径，支持快速迭代和规模化部署。</p>
-                </div>
-            </section>
-        </main>
-        
-        <footer>
+      <header>
+        <div class="logo">
+          <img
+            src="https://raw.githubusercontent.com/sine-io/labhaus/main/.github/brand/logo-128.png"
+            alt="Labhaus Logo"
+          />
+        </div>
+        <div class="badge">MVP image loop ready</div>
+        <h1>Labhaus</h1>
+        <p class="tagline">实验一次，复制千次</p>
+        <p class="subtitle">
+          Labhaus 是可视化 AI 内容生产平台。当前 MVP 已支持认证后的样式推荐和批量 AI
+          图像生成，后续将扩展到文章/文本到视频的完整工作流。
+        </p>
+        <div class="actions">
+          <a href="https://github.com/sine-io/labhaus" class="btn" target="_blank" rel="noreferrer">
+            View on GitHub
+          </a>
+          <a
+            href="https://github.com/sine-io/labhaus/blob/main/docs/guides/quick-start.md"
+            class="btn"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Quick Start
+          </a>
+        </div>
+      </header>
+
+      <main>
+        <section class="grid">
+          <article class="card">
+            <div class="icon">✨</div>
+            <h2>样式推荐</h2>
             <p>
-                Made with ❤️ by the Labhaus Team | 
-                <a href="https://github.com/sine-io/labhaus/blob/master/LICENSE" target="_blank">AGPL v3 License</a> | 
-                <a href="https://github.com/sine-io/labhaus/issues" target="_blank">Report Issues</a>
+              登录后输入创意描述，系统基于当前样式库返回匹配的视觉方向。当前运行时使用关键词重叠打分，后续接入
+              TF-IDF + Cosine 推荐。
             </p>
-            <p style="margin-top: 1rem; font-size: 0.9rem;">
-                © 2026 Labhaus. All rights reserved.
+          </article>
+          <article class="card">
+            <div class="icon">🖼️</div>
+            <h2>批量生图</h2>
+            <p>
+              一次提交多条 prompt，后端并发调用图像 Provider，下载结果并上传
+              MinIO，返回可打开和下载的预签名链接。
             </p>
-        </footer>
+          </article>
+          <article class="card">
+            <div class="icon">🎬</div>
+            <h2>视频工作流</h2>
+            <p>
+              下一阶段把当前图像素材能力扩展为文本/文章到分镜、生图、配音、字幕和 FFmpeg
+              合成的完整视频流程。
+            </p>
+          </article>
+        </section>
+
+        <section class="grid roadmap">
+          <article class="card">
+            <h2>当前实现</h2>
+            <ul class="roadmap">
+              <li>Go API + Next.js 前端</li>
+              <li>JWT Bearer Token</li>
+              <li>本地 mock image provider</li>
+              <li>MinIO 素材存储</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h2>本地演示</h2>
+            <ul class="roadmap">
+              <li>Docker Compose 启动依赖和 API</li>
+              <li>12 条 demo 样式 seed</li>
+              <li>scripts/mvp-smoke.sh</li>
+              <li>Web 页面可手动跑通</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h2>后续目标</h2>
+            <ul class="roadmap">
+              <li>500+ 样式库导入</li>
+              <li>任务监控和重试</li>
+              <li>React Flow 工作流编辑器</li>
+              <li>模板和团队能力</li>
+            </ul>
+          </article>
+        </section>
+      </main>
+
+      <footer>
+        <p>
+          <a
+            href="https://github.com/sine-io/labhaus/blob/main/LICENSE"
+            target="_blank"
+            rel="noreferrer"
+          >
+            AGPL v3 License
+          </a>
+          ·
+          <a href="https://github.com/sine-io/labhaus/issues" target="_blank" rel="noreferrer">
+            Report Issues
+          </a>
+        </p>
+        <p style="margin-top: 12px">Experiment. Automate. Scale.</p>
+      </footer>
     </div>
-</body>
+  </body>
 </html>
