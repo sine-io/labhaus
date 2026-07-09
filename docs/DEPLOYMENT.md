@@ -3,7 +3,7 @@
 当前可部署对象：
 
 - `backend/`：Go API，默认端口 `8080`。
-- `apps/web/`：Next.js 前端，默认端口 `3000`。
+- `frontend/`：Next.js 前端，默认端口 `3000`。
 - 依赖服务：PostgreSQL、Redis、MinIO/S3、图像 Provider。
 
 Docker Compose 当前只编排后端依赖、mock image provider 和 Go API；Web 前端需要单独运行或部署到支持 Next.js 的平台。
@@ -20,9 +20,9 @@ Docker Compose 当前只编排后端依赖、mock image provider 和 Go API；We
 git clone https://github.com/sine-io/labhaus.git
 cd labhaus
 
-docker compose up -d --build
-docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
-docker compose restart api
+docker compose -f infra/docker-compose.yml up -d --build
+docker compose -f infra/docker-compose.yml exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
+docker compose -f infra/docker-compose.yml restart api
 ```
 
 访问：
@@ -34,9 +34,10 @@ docker compose restart api
 启动 Web：
 
 ```bash
+cd frontend
 pnpm install
-cp apps/web/.env.example apps/web/.env.local
-pnpm --filter @labhaus/web dev
+cp .env.example .env.local
+pnpm dev
 ```
 
 访问 Web: http://localhost:3000
@@ -46,8 +47,8 @@ pnpm --filter @labhaus/web dev
 ### 1. 准备依赖
 
 ```bash
-docker compose up -d postgres redis minio mock-image-provider
-docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
+docker compose -f infra/docker-compose.yml up -d postgres redis minio mock-image-provider
+docker compose -f infra/docker-compose.yml exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
 ```
 
 ### 2. 配置环境变量
@@ -94,13 +95,14 @@ curl http://localhost:8080/api/health
 ## 方式 3：前端生产构建
 
 ```bash
+cd frontend
 pnpm install --frozen-lockfile
-cp apps/web/.env.example apps/web/.env.local
-pnpm --filter @labhaus/web build
-pnpm --filter @labhaus/web start
+cp .env.example .env.local
+pnpm build
+pnpm start
 ```
 
-`apps/web/.env.local`：
+`frontend/.env.local`：
 
 ```bash
 BACKEND_URL=http://localhost:8080
@@ -129,7 +131,7 @@ LABHAUS_SERVER_ENVIRONMENT=production ./labhaus-api
 
 ### Next.js 前端
 
-- 使用 `pnpm --filter @labhaus/web build` 构建。
+- 使用 `(cd frontend && pnpm build)` 构建。
 - 运行时设置 `BACKEND_URL` 指向 Go API 的内网或公网地址。
 - 如果前端和 API 分域部署，浏览器仍请求 Next.js 自身 `/api/*` 代理，不需要暴露 Go API 给浏览器。
 
@@ -175,8 +177,8 @@ server {
 
 ```bash
 git pull
-pnpm install --frozen-lockfile
-pnpm --filter @labhaus/web build
+(cd frontend && pnpm install --frozen-lockfile)
+(cd frontend && pnpm build)
 
 cd backend
 go build -o labhaus-api ./cmd/api

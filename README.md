@@ -34,9 +34,9 @@ Labhaus 的长期方向仍是 **AI 视频工作流实验室**：用可视化工�
 ## 当前主线
 
 - **后端**：`backend/` Go API（Gin + PostgreSQL + Redis + MinIO）
-- **前端**：`apps/web/` Next.js App Router
-- **包管理**：pnpm workspace + Turborepo
-- **本地演示**：`docker-compose.yml` 启动 API 依赖和 mock image provider；Web 前端单独运行
+- **前端**：`frontend/` Next.js App Router
+- **前端包管理**：`frontend/` 内独立 pnpm 工程
+- **本地演示**：`infra/docker-compose.yml` 启动 API 依赖和 mock image provider；Web 前端单独运行
 
 早期 TypeScript API、共享包和执行报告类文档已移除。如需参考旧实现，请从 git history 查看。
 
@@ -60,7 +60,7 @@ Labhaus 的定位不是一次性生成器，而是内容实验室：
 
 - Docker 和 Docker Compose
 - Node.js 20+
-- pnpm 11（仓库当前锁定 `pnpm@11.8.0`）
+- pnpm 11（前端工程当前锁定 `pnpm@11.8.0`）
 - Go 1.25+（仅裸跑 Go API 或运行 Go 测试时需要）
 
 ### 启动本地 MVP
@@ -70,18 +70,19 @@ git clone https://github.com/sine-io/labhaus.git
 cd labhaus
 
 # 启动 PostgreSQL、Redis、MinIO、mock image provider 和 Go API
-docker compose up -d --build
+docker compose -f infra/docker-compose.yml up -d --build
 
 # 导入本地 demo 样式数据（当前 seed 为 12 条，后续目标是接入 500+ 样式库）
-docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
+docker compose -f infra/docker-compose.yml exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
 
 # API 启动时会加载样式快照；导入 seed 后需要重启 API
-docker compose restart api
+docker compose -f infra/docker-compose.yml restart api
 
 # 启动 Next.js 前端
+cd frontend
 pnpm install
-cp apps/web/.env.example apps/web/.env.local
-pnpm --filter @labhaus/web dev
+cp .env.example .env.local
+pnpm dev
 ```
 
 访问：
@@ -94,7 +95,7 @@ pnpm --filter @labhaus/web dev
 ### 一键 Smoke
 
 ```bash
-scripts/mvp-smoke.sh
+infra/scripts/mvp-smoke.sh
 ```
 
 脚本会依次执行健康检查、注册/登录、样式推荐和批量生图。
@@ -127,8 +128,7 @@ Content-Type: application/json
 
 ```text
 labhaus/
-├── apps/
-│   └── web/                         # Next.js 前端
+├── frontend/                        # Next.js 前端
 ├── backend/                         # Go 后端服务
 │   ├── cmd/api/                     # API 入口
 │   ├── cmd/mock-image-provider/     # 本地 demo 图像 Provider
@@ -138,8 +138,9 @@ labhaus/
 │   │   └── infrastructure/          # HTTP、持久化、队列、存储、Provider 适配
 │   └── seeds/styles.sql             # 本地 demo 样式 seed
 ├── docs/                            # 当前产品、架构、开发和部署文档
-├── scripts/mvp-smoke.sh             # MVP API smoke 脚本
-└── docker-compose.yml               # 本地依赖和 Go API 编排
+└── infra/                           # 本地联调和跨服务编排
+    ├── docker-compose.yml           # 本地依赖和 Go API 编排
+    └── scripts/mvp-smoke.sh         # MVP API smoke 脚本
 ```
 
 ## 技术栈

@@ -5,7 +5,7 @@
 ## 当前主线
 
 - 后端：`backend/` Go API
-- 前端：`apps/web/` Next.js
+- 前端：`frontend/` Next.js
 - 本地依赖：PostgreSQL、Redis、MinIO、mock image provider
 
 当前 MVP 是“认证后的样式推荐 + 批量生图”。视频工作流、可视化编辑器和模板市场是后续阶段。
@@ -15,18 +15,20 @@
 ```bash
 git clone https://github.com/sine-io/labhaus.git
 cd labhaus
+cd frontend
 pnpm install
-cp apps/web/.env.example apps/web/.env.local
+cp .env.example .env.local
+cd ..
 cp backend/.env.example backend/.env
-docker compose up -d --build
-docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
-docker compose restart api
+docker compose -f infra/docker-compose.yml up -d --build
+docker compose -f infra/docker-compose.yml exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
+docker compose -f infra/docker-compose.yml restart api
 ```
 
 启动前端：
 
 ```bash
-pnpm --filter @labhaus/web dev
+(cd frontend && pnpm dev)
 ```
 
 裸跑后端：
@@ -69,18 +71,16 @@ chore: update tooling
 
 ```bash
 # 前端 helper 测试
-pnpm --filter @labhaus/web test
+(cd frontend && pnpm test)
 
 # 前端类型检查
-pnpm --filter @labhaus/web typecheck
+(cd frontend && pnpm typecheck)
 
 # 前端 lint
-pnpm --filter @labhaus/web lint
+(cd frontend && pnpm lint)
 
-# 全 workspace
-pnpm lint
-pnpm test
-pnpm build
+# 前端构建
+(cd frontend && pnpm build)
 
 # Go 后端
 cd backend
@@ -91,7 +91,7 @@ go build ./...
 本地 demo 验证：
 
 ```bash
-scripts/mvp-smoke.sh
+infra/scripts/mvp-smoke.sh
 ```
 
 部分 Go 测试需要 PostgreSQL 或 MinIO 正在运行。

@@ -16,7 +16,7 @@
 
 ## 当前产品 UI 色彩
 
-当前 `apps/web` 使用深色玻璃态主题。
+当前 `frontend` 使用深色玻璃态主题。
 
 ### Background Base
 

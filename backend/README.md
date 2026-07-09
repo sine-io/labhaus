@@ -46,10 +46,10 @@ backend/
 从仓库根目录：
 
 ```bash
-docker compose up -d --build
-docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
-docker compose restart api
-docker compose logs -f api
+docker compose -f infra/docker-compose.yml up -d --build
+docker compose -f infra/docker-compose.yml exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
+docker compose -f infra/docker-compose.yml restart api
+docker compose -f infra/docker-compose.yml logs -f api
 ```
 
 Compose 会启动：
@@ -65,8 +65,8 @@ Compose 会启动：
 先启动依赖服务：
 
 ```bash
-docker compose up -d postgres redis minio mock-image-provider
-docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
+docker compose -f infra/docker-compose.yml up -d postgres redis minio mock-image-provider
+docker compose -f infra/docker-compose.yml exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
 ```
 
 配置环境变量：
@@ -186,8 +186,8 @@ Content-Type: application/json
 导入后需要重启 API，因为运行时推荐器在启动时加载样式快照：
 
 ```bash
-docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
-docker compose restart api
+docker compose -f infra/docker-compose.yml exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
+docker compose -f infra/docker-compose.yml restart api
 ```
 
 ## 图像 Provider 合约

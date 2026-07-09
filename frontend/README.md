@@ -1,6 +1,6 @@
 # Labhaus Web
 
-`apps/web` 是当前 Labhaus 前端主线，基于 Next.js App Router 实现 MVP 页面：
+`frontend` 是当前 Labhaus 前端主线，基于 Next.js App Router 实现 MVP 页面：
 
 - `/`：MVP 入口页
 - `/auth`：注册、登录、保存/清除 Bearer Token
@@ -14,7 +14,7 @@
 复制模板：
 
 ```bash
-cp apps/web/.env.example apps/web/.env.local
+cp .env.example .env.local
 ```
 
 当前使用的变量：
@@ -27,11 +27,12 @@ BACKEND_URL=http://localhost:8080
 
 ## 开发
 
-从仓库根目录运行：
+从 `frontend/` 目录运行：
 
 ```bash
+cd frontend
 pnpm install
-pnpm --filter @labhaus/web dev
+pnpm dev
 ```
 
 访问 http://localhost:3000。
@@ -40,16 +41,16 @@ pnpm --filter @labhaus/web dev
 
 ```bash
 # 前端代理契约和 token helper 测试
-pnpm --filter @labhaus/web test
+pnpm test
 
 # TypeScript 类型检查
-pnpm --filter @labhaus/web typecheck
+pnpm typecheck
 
 # ESLint
-pnpm --filter @labhaus/web lint
+pnpm lint
 
 # 生产构建
-pnpm --filter @labhaus/web build
+pnpm build
 ```
 
 ## API 代理契约

@@ -49,7 +49,7 @@ Labhaus 是一个 **可视化 AI 内容生产平台**，长期目标是让专业
 | 图像存储           | 已实现 | 下载 Provider 返回图片并上传 MinIO `images` bucket                            |
 | 图片下载链接       | 已实现 | 返回 24 小时 MinIO 预签名 URL                                                 |
 | 本地 mock Provider | 已实现 | Docker Compose 默认启动 mock image provider                                   |
-| Smoke 脚本         | 已实现 | `scripts/mvp-smoke.sh` 验证注册/登录/推荐/生图                                |
+| Smoke 脚本         | 已实现 | `infra/scripts/mvp-smoke.sh` 验证注册/登录/推荐/生图                                |
 
 ### 3.2 当前不包含
 

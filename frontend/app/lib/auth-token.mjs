@@ -1,8 +1,8 @@
-export const TOKEN_STORAGE_KEY = "labhaus_bearer_token";
+export const TOKEN_STORAGE_KEY = 'labhaus_bearer_token';
 
 export function buildFrontendHeaders(token) {
   const headers = {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   };
 
   const normalized = normalizeBearerToken(token);
@@ -15,10 +15,10 @@ export function buildFrontendHeaders(token) {
 
 export function getStoredBearerToken(storage = globalThis.localStorage) {
   if (!storage) {
-    return "";
+    return '';
   }
 
-  return storage.getItem(TOKEN_STORAGE_KEY) ?? "";
+  return storage.getItem(TOKEN_STORAGE_KEY) ?? '';
 }
 
 export function storeBearerToken(token, storage = globalThis.localStorage) {
@@ -39,12 +39,10 @@ export function clearBearerToken(storage = globalThis.localStorage) {
 }
 
 function normalizeBearerToken(token) {
-  const trimmed = String(token ?? "").trim();
+  const trimmed = String(token ?? '').trim();
   if (!trimmed) {
-    return "";
+    return '';
   }
 
-  return trimmed.toLowerCase().startsWith("bearer ")
-    ? trimmed
-    : `Bearer ${trimmed}`;
+  return trimmed.toLowerCase().startsWith('bearer ') ? trimmed : `Bearer ${trimmed}`;
 }

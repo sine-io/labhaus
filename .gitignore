@@ -67,9 +67,6 @@ uploads/
 user-data/
 generated-videos/
 
-# Legacy local draft kept outside the active pnpm workspace
-frontend/
-
 # Local binaries
 bin/
 main

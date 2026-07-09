@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   /* 深色玻璃态主题 - 灵感来自 awesome-gpt-image-2 */
@@ -7,16 +7,16 @@
   --color-text-primary: #eef5ff;
   --color-text-secondary: #b7c7df;
   --color-text-muted: #9aaac0;
-  
+
   /* 青色主色调 */
   --color-accent-cyan: #50e7ff;
   --color-accent-cyan-light: #9eeeff;
   --color-accent-cyan-dim: #67e8f9;
-  
+
   /* 玻璃态边框和阴影 */
   --color-border-glass: rgba(255, 255, 255, 0.12);
   --color-border-glow: rgba(103, 232, 249, 0.62);
-  
+
   /* 渐变光晕 */
   --glow-cyan: rgba(47, 211, 255, 0.18);
   --glow-pink: rgba(255, 73, 167, 0.16);
@@ -45,12 +45,17 @@ html {
 body {
   min-width: 320px;
   margin: 0;
-  background: 
+  background:
     radial-gradient(circle at 12% 8%, var(--glow-cyan), transparent 28rem),
     radial-gradient(circle at 88% 0%, var(--glow-pink), transparent 30rem),
     linear-gradient(180deg, #060914 0%, #0b1020 48%, #080b14 100%);
   color: var(--color-text-primary);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-synthesis: none;
   text-rendering: geometricPrecision;
   -webkit-font-smoothing: antialiased;

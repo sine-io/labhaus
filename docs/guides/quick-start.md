@@ -8,7 +8,7 @@
 
 - Docker 和 Docker Compose
 - Node.js 20+
-- pnpm 11（仓库当前使用 `pnpm@11.8.0`）
+- pnpm 11（前端工程当前使用 `pnpm@11.8.0`）
 - `curl` 和 `jq`（运行 smoke 脚本需要）
 - Go 1.25+（裸跑 Go API 或运行 Go 测试需要）
 
@@ -22,7 +22,7 @@ cd labhaus
 ## 2. 启动后端依赖和 API
 
 ```bash
-docker compose up -d --build
+docker compose -f infra/docker-compose.yml up -d --build
 ```
 
 这会启动：
@@ -46,8 +46,8 @@ LABHAUS_IMAGE_PROVIDER_API_KEY=dev-mock-key
 当前本地 demo seed 包含 12 条样式。后续产品目标是接入 500+ 样式库，但当前仓库内 seed 不是完整样式库。
 
 ```bash
-docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
-docker compose restart api
+docker compose -f infra/docker-compose.yml exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
+docker compose -f infra/docker-compose.yml restart api
 ```
 
 需要重启 API 的原因：样式推荐器在 API 启动时加载样式快照。
@@ -55,12 +55,13 @@ docker compose restart api
 ## 4. 启动前端
 
 ```bash
+cd frontend
 pnpm install
-cp apps/web/.env.example apps/web/.env.local
-pnpm --filter @labhaus/web dev
+cp .env.example .env.local
+pnpm dev
 ```
 
-`apps/web/.env.local` 当前只需要：
+`frontend/.env.local` 当前只需要：
 
 ```bash
 BACKEND_URL=http://localhost:8080
@@ -81,7 +82,7 @@ BACKEND_URL=http://localhost:8080
 ## 6. 用脚本验证 MVP
 
 ```bash
-scripts/mvp-smoke.sh
+infra/scripts/mvp-smoke.sh
 ```
 
 脚本会：
@@ -100,7 +101,7 @@ API_URL=http://localhost:8080 \
 EMAIL=demo@example.com \
 PASSWORD=SecurePassword123! \
 NAME="Demo User" \
-scripts/mvp-smoke.sh
+infra/scripts/mvp-smoke.sh
 ```
 
 ## 7. 常用 API 手动验证
@@ -166,10 +167,10 @@ curl -X POST http://localhost:8080/api/images/generate \
 
 ```bash
 # 前端 helper 测试
-pnpm --filter @labhaus/web test
+(cd frontend && pnpm test)
 
 # 前端类型检查
-pnpm --filter @labhaus/web typecheck
+(cd frontend && pnpm typecheck)
 
 # Go 测试（需要 Go 1.25+）
 cd backend
@@ -183,8 +184,8 @@ go test ./...
 确认已导入 seed 并重启 API：
 
 ```bash
-docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
-docker compose restart api
+docker compose -f infra/docker-compose.yml exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
+docker compose -f infra/docker-compose.yml restart api
 ```
 
 ### 生图失败
@@ -192,8 +193,8 @@ docker compose restart api
 检查 mock provider 和 API 日志：
 
 ```bash
-docker compose ps mock-image-provider api
-docker compose logs mock-image-provider api
+docker compose -f infra/docker-compose.yml ps mock-image-provider api
+docker compose -f infra/docker-compose.yml logs mock-image-provider api
 ```
 
 ### Web 请求返回 401

@@ -1,9 +1,9 @@
 export function buildBackendHeaders(request) {
   const headers = {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   };
 
-  const authorization = request.headers.get("authorization");
+  const authorization = request.headers.get('authorization');
   if (authorization) {
     headers.Authorization = authorization;
   }
@@ -26,7 +26,7 @@ export function normalizeGenerateImageResponse(data) {
 }
 
 export function normalizeRecommendStyleRequest(body) {
-  const query = String(body?.query ?? body?.prompt ?? "").trim();
+  const query = String(body?.query ?? body?.prompt ?? '').trim();
   const limit = numericLimit(body?.limit ?? body?.top_k);
 
   const normalized = { query };
@@ -38,7 +38,7 @@ export function normalizeRecommendStyleRequest(body) {
 }
 
 function numericLimit(value) {
-  if (value === undefined || value === null || value === "") {
+  if (value === undefined || value === null || value === '') {
     return undefined;
   }
 

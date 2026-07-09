@@ -5,8 +5,8 @@
 ## 当前主线
 
 - `backend/`：Go API 服务。
-- `apps/web/`：Next.js App Router 前端。
-- `docker-compose.yml`：本地 PostgreSQL、Redis、MinIO、mock image provider 和 Go API。
+- `frontend/`：Next.js App Router 前端。
+- `infra/docker-compose.yml`：本地 PostgreSQL、Redis、MinIO、mock image provider 和 Go API。
 
 当前 MVP 是“认证后的样式推荐 + 批量生图”。视频生成、TTS、FFmpeg、可视化编辑器和模板市场属于后续阶段。
 
@@ -74,7 +74,7 @@ Authorization: Bearer <api-key>
 Browser
   |
   v
-apps/web (Next.js)
+frontend (Next.js)
   |  route handlers forward Authorization
   v
 backend Go API (Gin)
@@ -88,8 +88,7 @@ backend Go API (Gin)
 
 ```text
 labhaus/
-├── apps/
-│   └── web/
+├── frontend/
 ├── backend/
 │   ├── cmd/
 │   │   ├── api/
@@ -101,11 +100,9 @@ labhaus/
 │   ├── seeds/
 │   └── tests/
 ├── docs/
-├── scripts/
-├── docker-compose.yml
-├── package.json
-├── pnpm-workspace.yaml
-└── turbo.json
+└── infra/
+    ├── docker-compose.yml
+    └── scripts/
 ```
 
 ## Go 依赖摘要
@@ -125,21 +122,17 @@ labhaus/
 
 ## Node 依赖摘要
 
-实际版本以 `package.json`、`apps/web/package.json` 和 `pnpm-lock.yaml` 为准。
+实际版本以 `frontend/package.json` 和 `frontend/pnpm-lock.yaml` 为准。
 
-根 workspace：
-
-- TypeScript
-- ESLint
-- Prettier
-- Turbo
-
-`apps/web`：
+`frontend`：
 
 - Next.js
 - React / React DOM
 - Tailwind CSS
 - lucide-react
+- TypeScript
+- ESLint
+- Prettier
 
 ## 后续技术方向
 

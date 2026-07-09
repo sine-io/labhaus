@@ -13,9 +13,9 @@ Labhaus 的长期目标是 AI 视频工作流实验室；当前路线先以“�
 ## Phase 1：主线收敛（已完成）
 
 - [x] 明确 `backend/` Go API 为唯一后端主线。
-- [x] 明确 `apps/web/` Next.js 为唯一前端主线。
+- [x] 明确 `frontend/` Next.js 为唯一前端主线。
 - [x] 删除早期 TypeScript API、共享包和历史执行文档。
-- [x] 使用 pnpm workspace + Turborepo 管理前端。
+- [x] 使用 `frontend/` 独立 pnpm 工程管理前端。
 - [x] 使用 Docker Compose 管理本地依赖服务。
 
 ## Phase 2：图像素材 MVP（已实现）
@@ -38,7 +38,7 @@ Labhaus 的长期目标是 AI 视频工作流实验室；当前路线先以“�
 - [x] MinIO image storage 和预签名 URL。
 - [x] 批量生图页面。
 - [x] 本地 seed：`backend/seeds/styles.sql`。
-- [x] Smoke 脚本：`scripts/mvp-smoke.sh`。
+- [x] Smoke 脚本：`infra/scripts/mvp-smoke.sh`。
 
 ### 当前限制
 
@@ -51,7 +51,7 @@ Labhaus 的长期目标是 AI 视频工作流实验室；当前路线先以“�
 ### 收尾验证
 
 - [ ] 在具备 Go toolchain 的环境运行 `go test ./...`。
-- [ ] 在 Docker 环境运行 `scripts/mvp-smoke.sh`。
+- [ ] 在 Docker 环境运行 `infra/scripts/mvp-smoke.sh`。
 - [ ] 用 3-5 个种子用户验证 Web 流程。
 
 ## Phase 2.x：视频工作流（下一阶段）
@@ -114,10 +114,10 @@ Labhaus 的长期目标是 AI 视频工作流实验室；当前路线先以“�
 ### 当前验证命令
 
 ```bash
-pnpm --filter @labhaus/web test
-pnpm --filter @labhaus/web typecheck
-pnpm lint
-pnpm build
+(cd frontend && pnpm test)
+(cd frontend && pnpm typecheck)
+(cd frontend && pnpm lint)
+(cd frontend && pnpm build)
 
 cd backend
 go test ./...
@@ -126,7 +126,7 @@ go build ./...
 
 ### 后续补强
 
-- [ ] 后端 CI 中加入 Go toolchain、Go test 和 Go build。
+- [x] 后端 CI 中加入 Go toolchain 和 Go test。
 - [ ] 增加 Docker Compose smoke job。
 - [ ] 增加 API contract 测试。
 - [ ] 为视频工作流增加集成测试。

@@ -447,7 +447,7 @@ CANCELLED -> terminal
 
 ## Next.js 代理兼容
 
-`apps/web` 提供以下代理：
+`frontend` 提供以下代理：
 
 - `POST /api/users/register`
 - `POST /api/users/login`

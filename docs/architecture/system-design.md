@@ -19,7 +19,7 @@ Browser
   |
   | HTTP
   v
-apps/web (Next.js App Router)
+frontend (Next.js App Router)
   |
   | Route handlers forward Authorization
   v
@@ -35,7 +35,7 @@ Go API (Gin)
 
 ### 1. Web 前端
 
-位置：`apps/web`
+位置：`frontend`
 
 职责：
 

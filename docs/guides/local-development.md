@@ -3,7 +3,7 @@
 当前主线：
 
 - Go API：`backend/`
-- Next.js 前端：`apps/web/`
+- Next.js 前端：`frontend/`
 - 本地依赖：PostgreSQL、Redis、MinIO、mock image provider
 
 ## 环境要求
@@ -18,12 +18,14 @@
 ```bash
 git clone https://github.com/sine-io/labhaus.git
 cd labhaus
+cd frontend
 pnpm install
-cp apps/web/.env.example apps/web/.env.local
+cp .env.example .env.local
+cd ..
 cp backend/.env.example backend/.env
 ```
 
-`apps/web/.env.local`：
+`frontend/.env.local`：
 
 ```bash
 BACKEND_URL=http://localhost:8080
@@ -34,10 +36,10 @@ BACKEND_URL=http://localhost:8080
 ### 一次性启动本地演示环境
 
 ```bash
-docker compose up -d --build
-docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
-docker compose restart api
-pnpm --filter @labhaus/web dev
+docker compose -f infra/docker-compose.yml up -d --build
+docker compose -f infra/docker-compose.yml exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
+docker compose -f infra/docker-compose.yml restart api
+(cd frontend && pnpm dev)
 ```
 
 ### 分开启动
@@ -45,8 +47,8 @@ pnpm --filter @labhaus/web dev
 只启动依赖服务：
 
 ```bash
-docker compose up -d postgres redis minio mock-image-provider
-docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
+docker compose -f infra/docker-compose.yml up -d postgres redis minio mock-image-provider
+docker compose -f infra/docker-compose.yml exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
 ```
 
 裸跑 Go API：
@@ -59,26 +61,24 @@ go run cmd/api/main.go
 启动前端：
 
 ```bash
-pnpm --filter @labhaus/web dev
+(cd frontend && pnpm dev)
 ```
 
 ## 常用命令
 
 ```bash
 # 前端开发
-pnpm --filter @labhaus/web dev
+(cd frontend && pnpm dev)
 
 # 前端测试
-pnpm --filter @labhaus/web test
-pnpm --filter @labhaus/web typecheck
-pnpm --filter @labhaus/web lint
+(cd frontend && pnpm test)
+(cd frontend && pnpm typecheck)
+(cd frontend && pnpm lint)
 
-# 全 workspace
-pnpm lint
-pnpm test
-pnpm build
-pnpm format
-pnpm format:check
+# 前端构建和格式化
+(cd frontend && pnpm build)
+(cd frontend && pnpm format)
+(cd frontend && pnpm format:check)
 
 # 后端
 cd backend
@@ -87,7 +87,7 @@ go build ./...
 go run cmd/api/main.go
 
 # 本地 smoke
-scripts/mvp-smoke.sh
+infra/scripts/mvp-smoke.sh
 ```
 
 ## Docker 服务
@@ -139,8 +139,8 @@ scripts/mvp-smoke.sh
 ### 样式推荐结果为空
 
 ```bash
-docker compose exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
-docker compose restart api
+docker compose -f infra/docker-compose.yml exec -T postgres psql -U labhaus -d labhaus < backend/seeds/styles.sql
+docker compose -f infra/docker-compose.yml restart api
 ```
 
 ### API 启动失败，提示 Provider 配置缺失
@@ -157,13 +157,13 @@ export LABHAUS_IMAGE_PROVIDER_API_KEY=dev-mock-key
 存储和集成测试可能需要 PostgreSQL / MinIO 正在运行。先运行：
 
 ```bash
-docker compose up -d postgres minio
+docker compose -f infra/docker-compose.yml up -d postgres minio
 ```
 
 ### pnpm 安装失败
 
 ```bash
 pnpm store prune
-rm -rf node_modules apps/web/node_modules
-pnpm install
+rm -rf frontend/node_modules
+(cd frontend && pnpm install)
 ```
